@@ -1,0 +1,45 @@
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import RFECV
+from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+
+# Sélection des caractéristiques et de la variable cible
+X = df[['balance', 'income', 'credit_flows', 'debit_flows', 'transaction_amount']]
+y = df['has_product']
+
+# Normalisation des données
+scaler = StandardScaler()
+
+# Définir le modèle de base
+model = RandomForestClassifier(random_state=42)
+
+# Configuration du RFECV
+rfecv = RFECV(estimator=model, step=1, cv=StratifiedKFold(5), scoring='accuracy')
+
+# Créer un pipeline pour combiner la normalisation et le RFECV
+pipeline = Pipeline([
+    ('scaler', scaler),
+    ('rfecv', rfecv)
+])
+
+# Entraîner le pipeline
+pipeline.fit(X, y)
+
+# Obtenir les résultats
+selected_features = X.columns[rfecv.support_]
+ranking = rfecv.ranking_
+
+# Afficher les caractéristiques sélectionnées et leur importance
+print("Caractéristiques sélectionnées :\n", selected_features)
+print("Rang des caractéristiques :\n", ranking)
+print(f"Nombre optimal de caractéristiques sélectionnées : {rfecv.n_features_}")
+
+# Afficher les scores de validation croisée
+import matplotlib.pyplot as plt
+plt.figure()
+plt.xlabel("Nombre de caractéristiques sélectionnées")
+plt.ylabel("Score de validation croisée (accuracy)")
+plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
+plt.show()
