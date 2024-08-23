@@ -1,0 +1,189 @@
+### 1. Rééquilibrage des Données avec un Modèle d'IA Générative (GAN)
+
+Le premier point consiste à rééquilibrer les données de votre jeu de données en utilisant un modèle d'IA générative, tel que le Generative Adversarial Network (GAN). Voici les étapes détaillées pour accomplir cela :
+
+#### Étapes pour le rééquilibrage des données avec un GAN :
+
+1. **Préparation des Données** :
+   - Séparez vos données en deux ensembles : les caractéristiques (features) et la variable cible. Identifiez les classes minoritaires et majoritaires dans votre variable cible.
+
+   ```python
+   X = df.drop('has_product', axis=1)  # Caractéristiques
+   y = df['has_product']  # Variable cible
+   ```
+
+2. **Définir le Modèle GAN** :
+   - Le GAN se compose de deux parties : un générateur et un discriminateur. Le générateur essaie de créer de nouvelles données similaires aux données d'entraînement, tandis que le discriminateur essaie de distinguer les données réelles des données générées.
+
+   ```python
+   from tensorflow.keras import layers, models
+
+   # Définition du générateur
+   def build_generator(latent_dim, n_features):
+       model = models.Sequential([
+           layers.Dense(128, activation='relu', input_dim=latent_dim),
+           layers.Dense(256, activation='relu'),
+           layers.Dense(n_features, activation='linear')
+       ])
+       return model
+
+   # Définition du discriminateur
+   def build_discriminator(n_features):
+       model = models.Sequential([
+           layers.Dense(256, activation='relu', input_dim=n_features),
+           layers.Dense(128, activation='relu'),
+           layers.Dense(1, activation='sigmoid')
+       ])
+       return model
+   ```
+
+3. **Entraînement du GAN** :
+   - Le GAN est entraîné en alternant entre l'entraînement du discriminateur et du générateur. Le but est de faire en sorte que le générateur produise des exemples de plus en plus réalistes, difficiles à distinguer par le discriminateur.
+
+   ```python
+   def train_gan(generator, discriminator, gan, X_train, latent_dim, epochs=10000, batch_size=128):
+       for epoch in range(epochs):
+           # Génération d'exemples faux (synthétiques)
+           noise = np.random.normal(0, 1, (batch_size, latent_dim))
+           generated_data = generator.predict(noise)
+
+           # Sélection de vrais exemples
+           real_data = X_train[np.random.randint(0, X_train.shape[0], batch_size)]
+
+           # Création des étiquettes pour les vrais et faux exemples
+           valid = np.ones((batch_size, 1))
+           fake = np.zeros((batch_size, 1))
+
+           # Entraînement du discriminateur
+           d_loss_real = discriminator.train_on_batch(real_data, valid)
+           d_loss_fake = discriminator.train_on_batch(generated_data, fake)
+
+           # Préparation des inputs pour l'entraînement du générateur via le GAN
+           noise = np.random.normal(0, 1, (batch_size, latent_dim))
+           g_loss = gan.train_on_batch(noise, valid)
+
+           if epoch % 1000 == 0:
+               print(f"{epoch}/{epochs} - D Loss: {d_loss_real + d_loss_fake}, G Loss: {g_loss}")
+   ```
+
+4. **Génération de Nouvelles Données** :
+   - Une fois le GAN entraîné, vous pouvez générer de nouveaux exemples pour la classe minoritaire afin de rééquilibrer votre jeu de données.
+
+   ```python
+   n_to_generate = len(X[y == 0]) - len(X[y == 1])
+   noise = np.random.normal(0, 1, (n_to_generate, latent_dim))
+   synthetic_data = generator.predict(noise)
+
+   # Ajout des données générées à l'ensemble original pour rééquilibrer
+   X_balanced = np.vstack((X, synthetic_data))
+   y_balanced = np.hstack((y, np.ones(n_to_generate)))
+   ```
+
+5. **Résultats et Vérification** :
+   - Vérifiez que les données générées sont de bonne qualité et que le rééquilibrage est effectif. Vous pouvez visualiser les distributions des données rééquilibrées pour confirmer.
+
+   ```python
+   print("Distribution des classes après rééquilibrage :")
+   print(pd.Series(y_balanced).value_counts())
+   ```
+
+### Résumé
+
+En utilisant un GAN, vous pouvez générer de nouvelles instances pour la classe minoritaire de votre variable cible, ce qui permet de rééquilibrer vos données. Une fois cette étape complétée, vous pourrez passer à la construction des modèles de machine learning en utilisant les données rééquilibrées.
+
+
+
+
+
+Reprenons le deuxième point concernant la **construction des modèles de machine learning** après avoir rééquilibré vos données.
+
+### 2. Construction des Modèles de Machine Learning
+
+Maintenant que vos données sont rééquilibrées grâce à l'utilisation d'un GAN, vous pouvez procéder à la construction et à l'évaluation de plusieurs modèles de machine learning. Voici comment vous pouvez procéder :
+
+#### Étapes pour la construction des modèles :
+
+1. **Séparation des données rééquilibrées** :
+   - Divisez vos données en un ensemble d'entraînement (70%) et un ensemble de test (30%) afin de pouvoir évaluer la performance de vos modèles sur des données jamais vues.
+
+   ```python
+   from sklearn.model_selection import train_test_split
+
+   # Séparation des données rééquilibrées en ensembles d'entraînement et de test
+   X_train, X_test, y_train, y_test = train_test_split(X_balanced, y_balanced, test_size=0.3, random_state=42)
+   ```
+
+2. **Standardisation des données** :
+   - Les modèles de machine learning tels que KNN ou les modèles basés sur les arbres bénéficient de la standardisation des données pour améliorer la convergence et la performance.
+
+   ```python
+   from sklearn.preprocessing import StandardScaler
+
+   # Standardisation des données
+   scaler = StandardScaler()
+   X_train_scaled = scaler.fit_transform(X_train)
+   X_test_scaled = scaler.transform(X_test)
+   ```
+
+3. **Définir les modèles à entraîner** :
+   - Vous pouvez utiliser une variété de modèles pour comparer leurs performances. Dans cet exemple, nous utilisons : Gradient Boosting, Random Forest, Arbre de Décision, K-Nearest Neighbors (KNN), et AdaBoost.
+
+   ```python
+   from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, AdaBoostClassifier
+   from sklearn.tree import DecisionTreeClassifier
+   from sklearn.neighbors import KNeighborsClassifier
+
+   # Définir les modèles à entraîner
+   models = {
+       'Gradient Boosting': GradientBoostingClassifier(),
+       'Random Forest': RandomForestClassifier(),
+       'Decision Tree': DecisionTreeClassifier(),
+       'K-Nearest Neighbors': KNeighborsClassifier(),
+       'AdaBoost': AdaBoostClassifier()
+   }
+   ```
+
+4. **Entraîner et évaluer les modèles** :
+   - Pour chaque modèle, vous l’entraînez sur les données d'entraînement, puis vous effectuez des prédictions sur l'ensemble de test. Ensuite, vous évaluez les performances de chaque modèle à l'aide de différentes métriques telles que l'accuracy, la matrice de confusion, et le rapport de classification.
+
+   ```python
+   from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+   # Entraîner et évaluer chaque modèle
+   for name, model in models.items():
+       print(f"Entraînement du modèle : {name}")
+       model.fit(X_train_scaled, y_train)  # Entraînement du modèle
+       y_pred = model.predict(X_test_scaled)  # Prédictions sur le jeu de test
+
+       # Évaluation des performances
+       accuracy = accuracy_score(y_test, y_pred)
+       conf_matrix = confusion_matrix(y_test, y_pred)
+       class_report = classification_report(y_test, y_pred)
+       
+       print(f"\n{name} - Accuracy: {accuracy:.2f}")
+       print(f"Matrice de confusion:\n{conf_matrix}")
+       print(f"Rapport de classification:\n{class_report}")
+       print("\n" + "="*60 + "\n")
+   ```
+
+5. **Ajouter d'autres métriques d'évaluation** :
+   - Vous pouvez également ajouter d'autres métriques comme l'AUC-ROC, le F1-Score, le rappel (recall), et la précision (precision) pour avoir une vision plus complète des performances des modèles.
+
+   ```python
+   from sklearn.metrics import roc_auc_score, f1_score
+
+   for name, model in models.items():
+       model.fit(X_train_scaled, y_train)
+       y_pred = model.predict(X_test_scaled)
+       
+       # Calculer les différentes métriques
+       accuracy = accuracy_score(y_test, y_pred)
+       auc = roc_auc_score(y_test, model.predict_proba(X_test_scaled)[:, 1])
+       f1 = f1_score(y_test, y_pred)
+       
+       print(f"{name} - Accuracy: {accuracy:.2f}, AUC-ROC: {auc:.2f}, F1-Score: {f1:.2f}")
+   ```
+
+### Résumé
+
+En suivant ces étapes, vous construisez et évaluez plusieurs modèles de machine learning sur des données rééquilibrées, en utilisant des métriques variées pour déterminer le modèle le plus performant pour votre problématique. Cette approche vous permet d'améliorer la prédiction de la variable cible malgré le déséquilibre initial des classes.
