@@ -1,0 +1,105 @@
+GAN
+
+Pour rééquilibrer un jeu de données où la variable cible est déséquilibrée, l'utilisation de modèles d'intelligence artificielle générative, comme les auto-encodeurs variational (VAE) ou les Generative Adversarial Networks (GANs), peut être une approche efficace. Ces modèles peuvent générer de nouvelles instances de données pour la classe minoritaire afin de rééquilibrer les classes.
+
+### Étapes pour Rééquilibrer les Données avec des Modèles IA Générative
+
+1. *Sélection du Modèle Génératif* : Choisir entre un VAE ou un GAN, qui sont deux des modèles les plus couramment utilisés pour générer des données synthétiques.
+
+2. *Entraînement du Modèle* :
+   - Utiliser les données existantes pour entraîner le modèle génératif sur la classe minoritaire.
+   - Le modèle va apprendre la distribution des données de la classe minoritaire.
+
+3. *Génération de Nouvelles Données* :
+   - Après l'entraînement, générer des données synthétiques qui ressemblent aux données de la classe minoritaire.
+   - Ces nouvelles instances peuvent être ajoutées au jeu de données pour équilibrer les classes.
+
+4. *Validation des Données Générées* :
+   - Vérifier que les données générées sont réalistes et cohérentes avec les données d'origine.
+   - Effectuer une analyse exploratoire pour s'assurer que les données générées ne créent pas de biais ou de patterns non représentatifs.
+
+5. *Intégration dans le Modèle de Machine Learning* :
+   - Une fois les données rééquilibrées, utiliser ce nouveau jeu de données pour entraîner les modèles de machine learning.
+   - Comparer les performances du modèle avant et après l'ajout des données générées.
+
+### Exemple avec un GAN
+
+Voici un exemple d'approche avec un GAN pour rééquilibrer les données :
+
+python
+from keras.models import Sequential
+from keras.layers import Dense, LeakyReLU, BatchNormalization, Reshape, Flatten
+from keras.optimizers import Adam
+import numpy as np
+
+# Paramètres du GAN
+latent_dim = 100  # Dimension de l'espace latent
+adam = Adam(lr=0.0002, beta_1=0.5)
+
+# Modèle générateur
+generator = Sequential()
+generator.add(Dense(256, input_dim=latent_dim))
+generator.add(LeakyReLU(0.2))
+generator.add(BatchNormalization(momentum=0.8))
+generator.add(Dense(512))
+generator.add(LeakyReLU(0.2))
+generator.add(BatchNormalization(momentum=0.8))
+generator.add(Dense(1024))
+generator.add(LeakyReLU(0.2))
+generator.add(Dense(28 * 28 * 1, activation='tanh'))
+generator.add(Reshape((28, 28, 1)))
+
+# Modèle discriminateur
+discriminator = Sequential()
+discriminator.add(Flatten(input_shape=(28, 28, 1)))
+discriminator.add(Dense(512))
+discriminator.add(LeakyReLU(0.2))
+discriminator.add(Dense(256))
+discriminator.add(LeakyReLU(0.2))
+discriminator.add(Dense(1, activation='sigmoid'))
+discriminator.compile(loss='binary_crossentropy', optimizer=adam, metrics=['accuracy'])
+
+# Construction du GAN
+discriminator.trainable = False
+gan = Sequential([generator, discriminator])
+gan.compile(loss='binary_crossentropy', optimizer=adam)
+
+# Entraînement du GAN
+def train_gan(epochs, batch_size=128):
+    for epoch in range(epochs):
+        # Générer des faux exemples
+        noise = np.random.normal(0, 1, (batch_size, latent_dim))
+        generated_data = generator.predict(noise)
+        
+        # Obtenir des vrais exemples (données de la classe minoritaire)
+        idx = np.random.randint(0, len(X_minority), batch_size)
+        real_data = X_minority[idx]
+        
+        # Combiner vrais et faux exemples
+        X = np.vstack((real_data, generated_data))
+        y = np.zeros((2 * batch_size, 1))
+        y[:batch_size] = 1  # Vrais exemples
+        
+        # Entraîner le discriminateur
+        d_loss = discriminator.train_on_batch(X, y)
+        
+        # Entraîner le générateur via le GAN
+        noise = np.random.normal(0, 1, (batch_size, latent_dim))
+        y_gan = np.ones((batch_size, 1))
+        g_loss = gan.train_on_batch(noise, y_gan)
+        
+        # Afficher la progression de l'entraînement
+        if epoch % 100 == 0:
+            print(f"Epoch: {epoch} | D loss: {d_loss[0]} | G loss: {g_loss}")
+
+# Entraîner le GAN
+train_gan(epochs=10000, batch_size=32)
+
+
+### Résultats et Précautions
+
+- *Performance du Modèle* : Après l'entraînement du modèle GAN et la génération de nouvelles données, vous devez vérifier si les performances de votre modèle de classification s'améliorent sur les classes rééquilibrées.
+- *Validation Croisée* : Assurez-vous d'utiliser une validation croisée pour vérifier que les données générées n'introduisent pas de surajustement (overfitting) dans votre modèle.
+- *Comparaison avec d'autres Techniques* : Comparez les résultats obtenus avec des méthodes plus classiques de rééquilibrage, comme le sur-échantillonnage (SMOTE) ou le sous-échantillonnage.
+
+Si vous avez des questions supplémentaires sur l'utilisation de GANs ou d'autres méthodes pour rééquilibrer vos données, n'hésitez pas à demander.
