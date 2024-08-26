@@ -1,0 +1,11 @@
+SELECT
+    TRUNC(date_col, 'IW') AS semaine, -- 'IW' signifie ISO week, pour tronquer au début de la semaine
+    COUNT(*) AS nombre_enregistrements
+FROM
+    ta_table
+WHERE
+    date_col >= TRUNC(CURRENT_DATE, 'YYYY') -- Cette condition récupère les données depuis le début de l'année
+GROUP BY
+    TRUNC(date_col, 'IW')
+ORDER BY
+    semaine;
