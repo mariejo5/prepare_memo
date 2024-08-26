@@ -1,0 +1,41 @@
+from sklearn.metrics import f1_score, recall_score, precision_score
+
+def evaluation_model(X, Y, model, param_grid, num_folds=5):
+    # Utilisation de KFold pour la validation croisée
+    kfold = KFold(n_splits=num_folds, shuffle=True, random_state=1234)
+
+    # Utilisation de GridSearchCV pour rechercher les meilleurs parametres avec la validation croisée (Première validation croisée)
+    grid_search = GridSearchCV(model, param_grid=param_grid, scoring='accuracy', cv=kfold)
+    grid_search.fit(X, Y)
+
+    best_model = grid_search.best_estimator_  # Meilleurs paramètres
+
+    # Calcul des différentes métriques (Deuxième validation croisée)
+    accuracy_scores = cross_val_score(best_model, X, Y, scoring='accuracy', cv=kfold)
+    precision_scores = cross_val_score(best_model, X, Y, scoring='precision', cv=kfold)
+    recall_scores = cross_val_score(best_model, X, Y, scoring='recall', cv=kfold)
+    f1_scores = cross_val_score(best_model, X, Y, scoring='f1', cv=kfold)
+
+    # Calcul de la moyenne des scores
+    average_accuracy = accuracy_scores.mean()
+    average_precision = precision_scores.mean()
+    average_recall = recall_scores.mean()
+    average_f1 = f1_scores.mean()
+
+    return average_accuracy, average_precision, average_recall, average_f1, best_model
+
+# Évaluation de chaque modèle avec les nouvelles métriques
+for name, model, param_grid in models_classification:
+    acc, precision, recall, f1, best_model = evaluation_model(X_scaled, Y, model, param_grid)
+    
+    print(f"Modèle: {name}")
+    
+    # Récupérer les hyperparamètres spécifiés dans models_classification
+    params_specifie = {param: best_model.get_params()[param] for param in param_grid.keys()}
+    
+    print(f"Meilleurs Hyperparamètres: {params_specifie}")
+    print(f"Accuracy: {acc:.4f}")
+    print(f"Précision: {precision:.4f}")
+    print(f"Rappel: {recall:.4f}")
+    print(f"F1-Score: {f1:.4f}")
+    print("\n")
