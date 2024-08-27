@@ -1,0 +1,16 @@
+import matplotlib.pyplot as plt
+
+# Compter le nombre d'occurrences pour chaque valeur de la variable cible
+counts = df['has_product'].value_counts()
+
+# Définir les labels et les couleurs
+labels = ['Pas de produit', 'A un produit']
+colors = ['red', 'green']
+
+# Construction du diagramme en secteurs
+plt.figure(figsize=(6, 6))
+plt.pie(counts, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'black'})
+
+# Configuration du graphique
+plt.title("Répartition de la variable cible 'has_product'")
+plt.show()
