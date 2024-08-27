@@ -1,0 +1,22 @@
+import matplotlib.pyplot as plt
+
+# Calculer la distribution en pourcentage
+distribution = df.groupby(['gender', 'has_product']).size().unstack().apply(lambda x: x / x.sum() * 100, axis=1)
+
+# Créer l'histogramme empilé avec les pourcentages
+plt.figure(figsize=(8, 6))
+distribution.plot(kind='bar', stacked=True, color=['blue', 'orange'], edgecolor='black')
+
+# Ajouter les pourcentages au-dessus des barres
+for i in range(distribution.shape[0]):
+    for j in range(distribution.shape[1]):
+        plt.text(i, distribution.iloc[i, :j+1].sum() - distribution.iloc[i, j] / 2, 
+                 f'{distribution.iloc[i, j]:.1f}%', ha='center', color='white', fontsize=10)
+
+# Configuration du graphique
+plt.title("Distribution de la variable cible 'has_product' par rapport au sexe")
+plt.xlabel("Sexe")
+plt.ylabel("Pourcentage de clients")
+plt.xticks(rotation=0)
+plt.legend(["Pas de produit", "A un produit"], title="Variable cible", loc="upper right")
+plt.show()
