@@ -1,0 +1,29 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Calculer la distribution en pourcentage
+distribution = df.groupby(['gender', 'has_product']).size().unstack().apply(lambda x: x / x.sum() * 100, axis=1)
+
+# Créer un graphique à barres côte à côte
+plt.figure(figsize=(8, 6))
+bar_width = 0.35
+index = np.arange(len(distribution))
+
+# Barres pour 'Pas de produit'
+plt.bar(index, distribution[0], bar_width, color='blue', label='Pas de produit', edgecolor='black')
+
+# Barres pour 'A un produit'
+plt.bar(index + bar_width, distribution[1], bar_width, color='orange', label='A un produit', edgecolor='black')
+
+# Ajouter les pourcentages au-dessus des barres
+for i in range(distribution.shape[0]):
+    plt.text(i, distribution.iloc[i, 0] + 1, f'{distribution.iloc[i, 0]:.1f}%', ha='center', color='black', fontsize=10)
+    plt.text(i + bar_width, distribution.iloc[i, 1] + 1, f'{distribution.iloc[i, 1]:.1f}%', ha='center', color='black', fontsize=10)
+
+# Configuration du graphique
+plt.title("Distribution de la variable cible 'has_product' par rapport au sexe")
+plt.xlabel("Sexe")
+plt.ylabel("Pourcentage de clients")
+plt.xticks(index + bar_width / 2, distribution.index)
+plt.legend(title="Variable cible", loc="upper right")
+plt.show()
