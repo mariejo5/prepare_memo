@@ -1,0 +1,23 @@
+import matplotlib.pyplot as plt
+
+# Compter le nombre d'occurrences pour chaque valeur de la variable cible
+counts = df['has_product'].value_counts()
+
+# Définir les couleurs pour chaque barre (0 en rouge, 1 en vert)
+colors = ['red', 'green']
+
+# Construction de l'histogramme pour la variable cible
+plt.figure(figsize=(6, 4))
+bars = plt.bar(counts.index, counts.values, color=colors, edgecolor='black')
+
+# Ajouter les valeurs au-dessus de chaque barre
+for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+
+# Configuration du graphique
+plt.title("Distribution de la variable cible 'has_product'")
+plt.xlabel("Valeur de la variable cible (0 ou 1)")
+plt.ylabel("Nombre de clients")
+plt.xticks([0, 1])
+plt.show()
