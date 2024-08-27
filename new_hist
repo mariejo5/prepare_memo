@@ -1,0 +1,10 @@
+import matplotlib.pyplot as plt
+
+# Construction de l'histogramme pour la variable cible
+plt.figure(figsize=(6, 4))
+plt.hist(df['has_product'], bins=2, color='skyblue', edgecolor='black')
+plt.title("Distribution de la variable cible 'has_product'")
+plt.xlabel("Valeur de la variable cible (0 ou 1)")
+plt.ylabel("Nombre de clients")
+plt.xticks([0, 1])
+plt.show()
