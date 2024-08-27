@@ -1,0 +1,13 @@
+import matplotlib.pyplot as plt
+
+# Créer l'histogramme empilé
+plt.figure(figsize=(8, 6))
+df.groupby(['gender', 'has_product']).size().unstack().plot(kind='bar', stacked=True, color=['red', 'green'], edgecolor='black')
+
+# Configuration du graphique
+plt.title("Distribution de la variable cible 'has_product' par rapport au sexe")
+plt.xlabel("Sexe")
+plt.ylabel("Nombre de clients")
+plt.xticks(rotation=0)
+plt.legend(["Pas de produit", "A un produit"], title="Variable cible")
+plt.show()
