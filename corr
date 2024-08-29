@@ -1,0 +1,8 @@
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Création de la carte thermique (heatmap) des valeurs manquantes
+plt.figure(figsize=(10, 6))
+sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
+plt.title("Carte thermique des valeurs manquantes")
+plt.show()
