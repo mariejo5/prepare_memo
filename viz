@@ -1,0 +1,69 @@
+Pour visualiser vos variables en fonction de votre variable cible, vous pouvez utiliser différentes techniques de visualisation en fonction du type de vos variables (catégorielles ou continues). Voici quelques exemples :
+
+### 1. **Visualisation de Variables Catégorielles :**
+
+#### a) Diagrammes en barres :
+Pour chaque variable catégorielle, vous pouvez tracer un diagramme en barres pour voir la répartition des catégories en fonction de la variable cible.
+
+```python
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Exemple avec la variable 'gender'
+plt.figure(figsize=(8, 6))
+sns.countplot(x='gender', hue='has_product', data=df, palette='Set2')
+plt.title("Répartition du genre en fonction de la variable cible 'has_product'")
+plt.xlabel("Genre")
+plt.ylabel("Nombre de clients")
+plt.show()
+```
+
+#### b) Diagrammes en barres empilées :
+Vous pouvez également utiliser des diagrammes en barres empilées pour voir la distribution des catégories à l'intérieur de chaque catégorie de la variable cible.
+
+```python
+pd.crosstab(df['gender'], df['has_product'], normalize='index').plot(kind='bar', stacked=True, color=['orange', 'blue'], edgecolor='black')
+plt.title("Distribution du genre en fonction de la variable cible")
+plt.xlabel("Genre")
+plt.ylabel("Proportion")
+plt.legend(["Pas de produit", "A un produit"], title="Variable cible")
+plt.show()
+```
+
+### 2. **Visualisation de Variables Continues :**
+
+#### a) Boîtes à moustaches (Boxplots) :
+Les boxplots permettent de visualiser la distribution d'une variable continue en fonction des différentes classes de la variable cible.
+
+```python
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='has_product', y='balance', data=df, palette='Set2')
+plt.title("Distribution de 'balance' en fonction de la variable cible 'has_product'")
+plt.xlabel("Variable cible")
+plt.ylabel("Balance")
+plt.show()
+```
+
+#### b) Densité (KDE Plot) :
+Un KDE plot est utile pour voir la distribution d'une variable continue pour différentes classes de la variable cible.
+
+```python
+plt.figure(figsize=(8, 6))
+sns.kdeplot(df['income'][df['has_product'] == 0], shade=True, color='red', label='Pas de produit')
+sns.kdeplot(df['income'][df['has_product'] == 1], shade=True, color='blue', label='A un produit')
+plt.title("Densité de 'income' en fonction de la variable cible 'has_product'")
+plt.xlabel("Income")
+plt.ylabel("Densité")
+plt.legend()
+plt.show()
+```
+
+### 3. **Paires de Variables (Pairplot) :**
+Pour une vue d'ensemble des relations entre plusieurs variables continues en fonction de la variable cible, vous pouvez utiliser un `pairplot` de Seaborn.
+
+```python
+sns.pairplot(df, hue='has_product', palette='Set2', diag_kind='kde')
+plt.show()
+```
+
+Ces visualisations permettent de mieux comprendre les relations entre vos variables explicatives et la variable cible, et peuvent être très utiles lors de l'étape de sélection des caractéristiques et de la modélisation.
