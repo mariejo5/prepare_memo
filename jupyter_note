@@ -1,0 +1,873 @@
+import teradatasql as td
+import os 
+import numpy as np
+import pandas as pd
+from getpass import getpass
+from functools import reduce
+import warnings
+warnings.filterwarnings("ignore")
+pd.set_option("display.max_column", 1000)
+pd.set_option('display.max_rows', None)
+pd.options.display.float_format = '{:.0f}'.format
+#E_EKOUA2
+#Etl-21IE,86al
+#E_MYAO
+#Anna_jose@7725m
+username=input('Username: ')
+pswd=getpass('Passwd: ')
+con = td.connect(None, host='tdprod.kb.cz', tmode='TERA', logmech='LDAP', user=username, password=pswd)
+username='********************************'
+pswd='********************************'
+del(pswd)
+del(username)
+EXTRACTION DE DONNES
+df = pd.read_csv('data.csv')
+Présentation des données
+from summarytools import dfSummary
+dfSummary(df)
+Notre jeu de données contient 609,253 observations et 27 variables. ici notre variable cible flag_ppo a deux classe , on a '0' 478,195 soit (82.9%) et '1' 98,383 soit (17.1%). Donc nous sommes dans un cas de données déséquilibrées. On également la variable 'age' qui contient des valeurs manquantes 1,087 soit (0.2%)
+
+Exploration et visualisation des données
+df.head()
+pays	month_id	Party_Id	Segments_od	seg_client_tag_detail	Relationship_Duration_Months	Inactivity_Months	Gender_Code	Marketing_Income_Amt	age	eligible_ppo	BANK_INTERNET	decouvert	credit_consommation	credit_immobilier	Compte_courant	Placement	Epargne	flux_debiteur	flux_crediteur	stock_carte	stock_decouver	stock_Compte_courant	stock_Placement	stock_Epargne	stock_credit_conso	stock_credit_immobilier
+0	SGCIV	202406	11	BONNE GAMME	Particulier	297	0	M	0	56	0	1	1	1	0	1	0	1	1	1	5	1	1	0	2	2	0
+1	SGCIV	202406	15	GRAND PUBLIC	Particulier	297	0	F	321879	68	1	0	0	0	0	1	0	0	0	1	0	0	1	0	0	0	0
+2	SGCIV	202406	19	PATRIMONIAUX	Particulier	297	0	F	7459244	51	1	1	0	0	1	1	0	1	1	1	1	0	1	0	2	0	1
+3	SGCIV	202406	21	PATRIMONIAUX	Particulier	297	0	M	5539872	52	1	1	1	1	0	1	0	1	1	1	2	1	1	0	3	1	0
+4	SGCIV	202406	25	GRAND PUBLIC	Particulier	297	21	M	250000	73	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+df.columns
+Index(['pays', 'month_id', 'Party_Id', 'Segments_od', 'seg_client_tag_detail',
+       'Relationship_Duration_Months', 'Inactivity_Months', 'Gender_Code',
+       'Marketing_Income_Amt', 'age', 'eligible_ppo', 'BANK_INTERNET',
+       'decouvert', 'credit_consommation', 'credit_immobilier',
+       'Compte_courant', 'Placement', 'Epargne', 'flux_debiteur',
+       'flux_crediteur', 'stock_carte', 'stock_decouver',
+       'stock_Compte_courant', 'stock_Placement', 'stock_Epargne',
+       'stock_credit_conso', 'stock_credit_immobilier'],
+      dtype='object')
+suppression de variables non informative
+Nous allos retirer certaines variables dans notre jeu de données car elles n'apporteront information à notre étude. les variables à retirer sont :'pays', 'month_id', 'Party_Id', 'seg_client_tag_detail'
+
+df = df.drop(columns=['pays', 'month_id', 'Party_Id', 'seg_client_tag_detail'])
+df.shape
+(609253, 23)
+Représentation univariée
+
+target = df['credit_consommation']
+from matplotlib import pyplot as plt 
+import numpy as np
+import pandas as pd
+# Compter le nombre d'occurrences pour chaque valeur de la variable cible
+counts = df['credit_consommation'].value_counts()
+
+# Définir les couleurs pour chaque barre (0 en rouge, 1 en vert)
+colors = ['C1', 'r']
+
+# Construction de l'histogramme pour la variable cible
+plt.figure(figsize=(6, 4))
+bars = plt.bar(counts.index, counts.values, color=colors, edgecolor='gray')
+
+# Ajouter les valeurs au-dessus de chaque barre
+for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+
+# Configuration du graphique
+plt.title("Distribution de la variable cible 'credit_consommation'")
+plt.xlabel("Valeur de la variable cible credit_consommation")
+plt.ylabel("Nombre de clients")
+plt.xticks([0, 1])
+plt.show()
+No description has been provided for this image
+import matplotlib.pyplot as plt
+
+# Compter le nombre d'occurrences pour chaque valeur de la variable cible
+counts = df['credit_consommation'].value_counts()
+
+# Définir les labels et les couleurs
+labels = ['0', '1']
+colors = ['C1', 'r']
+
+# Construction du diagramme en secteurs
+plt.figure(figsize=(4, 4))
+plt.pie(counts, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'gray'})
+
+# Configuration du graphique
+plt.title("Répartition de la variable cible credit_consommation")
+plt.show()
+No description has been provided for this image
+df.dtypes.value_counts().plot.pie()
+<Axes: ylabel='count'>
+No description has been provided for this image
+df.columns
+Index(['Segments_od', 'Relationship_Duration_Months', 'Inactivity_Months',
+       'Gender_Code', 'Marketing_Income_Amt', 'age', 'eligible_ppo',
+       'BANK_INTERNET', 'decouvert', 'credit_consommation',
+       'credit_immobilier', 'Compte_courant', 'Placement', 'Epargne',
+       'flux_debiteur', 'flux_crediteur', 'stock_carte', 'stock_decouver',
+       'stock_Compte_courant', 'stock_Placement', 'stock_Epargne',
+       'stock_credit_conso', 'stock_credit_immobilier'],
+      dtype='object')
+df['Segments_od'].unique()
+array(['BONNE GAMME', 'GRAND PUBLIC', 'PATRIMONIAUX', 'NON SEGMENTE'],
+      dtype=object)
+import seaborn as sns
+# Compter le nombre d'occurrences pour chaque valeur de la variable cible
+counts = df['Segments_od'].value_counts()
+
+# Définir les couleurs pour chaque barre (0 en rouge, 1 en vert)
+colors = ['C1', 'r', 'b', 'C2']
+
+# Construction de l'histogramme pour la variable cible
+plt.figure(figsize=(6, 4))
+bars = plt.bar(counts.index, counts.values, color=colors, edgecolor='gray')
+
+# Ajouter les valeurs au-dessus de chaque barre
+for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+
+# Configuration du graphique
+plt.title("Distribution de la variable cible Segments_od")
+plt.xlabel("Valeur de la variable cible Segments_od")
+plt.ylabel("Nombre de clients")
+plt.xticks(['BONNE GAMME', 'GRAND PUBLIC', 'PATRIMONIAUX', 'NON SEGMENTE'])
+plt.show()
+No description has been provided for this image
+# Compter le nombre d'occurrences pour chaque valeur de la variable cible
+counts = df['Gender_Code'].value_counts()
+
+# Définir les couleurs pour chaque barre (0 en rouge, 1 en vert)
+colors = ['C1', 'g', 'b']
+
+# Construction de l'histogramme pour la variable cible
+plt.figure(figsize=(6, 4))
+bars = plt.bar(counts.index, counts.values, color=colors, edgecolor='gray')
+
+# Ajouter les valeurs au-dessus de chaque barre
+for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+
+# Configuration du graphique
+plt.title("Distribution de la variable cible 'Gender_Code'")
+plt.xlabel("Valeur de la variable cible 'Gender_Code'")
+plt.ylabel("Nombre de clients")
+plt.xticks(['M  ', 'F  ', 'U  '])
+plt.show()
+No description has been provided for this image
+import matplotlib.pyplot as plt
+
+# Compter le nombre d'occurrences pour chaque valeur de la variable cible
+counts = df['Gender_Code'].value_counts()
+
+# Définir les labels et les couleurs
+labels = ['M  ', 'F  ', 'U  ']
+colors = ['r', 'g', 'b']
+
+# Construction du diagramme en secteurs
+plt.figure(figsize=(4, 4))
+plt.pie(counts, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'gray'})
+
+# Configuration du graphique
+plt.title("Répartition de la variable cible 'Gender_Code'")
+plt.show()
+No description has been provided for this image
+plt.figure(figsize=(4,4))
+sns.boxplot(df['Marketing_Income_Amt'])
+plt.title(f'Boxplot de  Marketing_Income_Amt')
+plt.show()
+No description has been provided for this image
+sns.boxplot(x = 'age', data = df)
+<Axes: xlabel='age'>
+No description has been provided for this image
+Représentation Bivariée
+sns.boxplot(x='credit_consommation', y ='age', data = df)
+<Axes: xlabel='credit_consommation', ylabel='age'>
+No description has been provided for this image
+sns.boxplot(x='credit_consommation', y ='Marketing_Income_Amt', data = df)
+<Axes: xlabel='credit_consommation', ylabel='Marketing_Income_Amt'>
+No description has been provided for this image
+sns.boxplot(x='credit_consommation', y ='age', hue='Gender_Code', data = df)
+<Axes: xlabel='credit_consommation', ylabel='age'>
+No description has been provided for this image
+sns.barplot(x='credit_consommation', y ='Segments_od', hue = 'credit_consommation', data = df)
+<Axes: xlabel='credit_consommation', ylabel='Segments_od'>
+No description has been provided for this image
+pd.crosstab(df['Segments_od'], df['credit_consommation'], normalize='index').plot(kind='bar', stacked=True, color=['b', 'r'], edgecolor='black')
+plt.title("Distribution du genre en fonction de la variable cible")
+plt.xlabel('Segments_od')
+plt.ylabel('credit_consommation')
+plt.legend(["0", "1"], title="Variable cible")
+plt.show()
+No description has been provided for this image
+df.describe()
+Relationship_Duration_Months	Inactivity_Months	Marketing_Income_Amt	age	eligible_ppo	BANK_INTERNET	decouvert	credit_consommation	credit_immobilier	Compte_courant	Placement	Epargne	flux_debiteur	flux_crediteur	stock_carte	stock_decouver	stock_Compte_courant	stock_Placement	stock_Epargne	stock_credit_conso	stock_credit_immobilier
+count	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253
+mean	132	36	353267	43	1	0	0	0	0	1	0	1	0	1	0	0	1	0	1	0	0
+std	136	87	2315500	16	0	0	0	0	0	0	0	0	0	0	1	0	1	0	1	0	0
+min	0	0	0	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+25%	36	0	50000	32	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+50%	79	1	150000	41	1	0	0	0	0	1	0	1	0	1	0	0	1	0	1	0	0
+75%	184	21	323319	52	1	1	0	0	0	1	0	1	0	1	1	0	1	0	1	0	0
+max	999	1493	1248000000	124	1	1	1	1	1	1	1	1	1	1	37	2	10	67	81	4	3
+Nettoyage de données
+df.isnull().sum().unique()
+array([0])
+df.fillna(value={'age':df['age'].median()}, inplace = True )
+détection de valeur aberrante et traitement de variable manquante
+float_df = df.select_dtypes(include=['float']).columns
+int_df = df.select_dtypes(include=['int']).columns
+caract_df = df.select_dtypes(include=['object']).columns
+def detection_valeurs_aberrantes(df, col):
+    
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        borne_inferieure = Q1 - 1.5 * IQR
+        borne_superieure = Q3 + 1.5 * IQR
+        # Remplacer les valeurs aberrantes par la médiane
+        #median = df[col].median()
+        #df.loc[df[col]<borne_inferieure,col] = median
+        #df.loc[df[col]>borne_superieure,col] = median
+        df = df[(df[col] >= borne_inferieure) | (df[col] <= borne_superieure)]
+        return df
+def median_valeurs_aberrantes(df, colonnes):
+    for col in colonnes:
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        borne_inferieure = Q1 - 1.5 * IQR
+        borne_superieure = Q3 + 1.5 * IQR
+        # Remplacer les valeurs aberrantes par la médiane
+        median = df[col].median()
+        df.loc[df[col]<borne_inferieure,col] = median
+        df.loc[df[col]>borne_superieure,col] = median
+        #df = df[(df[col] >= borne_inferieure) & (df[col] <= borne_superieure)]
+    return df
+df= median_valeurs_aberrantes(df, float_df)
+df[float_df].describe()
+Relationship_Duration_Months	Marketing_Income_Amt	age
+count	609253	609253	609253
+mean	79	164003	42
+std	58	132111	15
+min	0	0	2
+25%	36	50000	32
+50%	79	150000	41
+75%	98	250000	52
+max	251	550000	82
+sns.boxplot(x='age', data = df)
+<Axes: xlabel='age'>
+No description has been provided for this image
+sns.boxplot(x='Marketing_Income_Amt', data = df)
+<Axes: xlabel='Marketing_Income_Amt'>
+No description has been provided for this image
+Preparation de données
+encodade des variable
+
+caract_df
+Index(['Segments_od', 'Gender_Code'], dtype='object')
+from sklearn.preprocessing import LabelEncoder
+encoder = LabelEncoder()
+df["Gender_Code"] = encoder.fit_transform(df["Gender_Code"])
+df["Segments_od"] = encoder.fit_transform(df["Segments_od"])
+df.head()
+Segments_od	Relationship_Duration_Months	Inactivity_Months	Gender_Code	Marketing_Income_Amt	age	eligible_ppo	BANK_INTERNET	decouvert	credit_consommation	credit_immobilier	Compte_courant	Placement	Epargne	flux_debiteur	flux_crediteur	stock_carte	stock_decouver	stock_Compte_courant	stock_Placement	stock_Epargne	stock_credit_conso	stock_credit_immobilier
+0	0	297	0	1	0	56	0	1	1	1	0	1	0	1	1	1	5	1	1	0	2	2	0
+1	1	297	0	0	321879	68	1	0	0	0	0	1	0	0	0	1	0	0	1	0	0	0	0
+2	3	297	0	0	150000	51	1	1	0	0	1	1	0	1	1	1	1	0	1	0	2	0	1
+3	3	297	0	1	150000	52	1	1	1	1	0	1	0	1	1	1	2	1	1	0	3	1	0
+4	1	297	21	1	250000	73	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+selection des caractéristiques pertinentes
+
+Test khi deux
+ 
+def corr_mat(df) : 
+    plt.figure(figsize=(6, 6))
+    sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+    plt.title('Matrice de corrélations', fontsize= 15, fontweight = 'bold')
+    plt.show()
+X.columns
+Index(['Segments_od', 'Relationship_Duration_Months', 'Inactivity_Months',
+       'Gender_Code', 'Marketing_Income_Amt', 'age', 'eligible_ppo',
+       'BANK_INTERNET', 'decouvert', 'credit_immobilier', 'Compte_courant',
+       'Placement', 'Epargne', 'flux_debiteur', 'flux_crediteur',
+       'stock_carte', 'stock_decouver', 'stock_Compte_courant',
+       'stock_Placement', 'stock_Epargne', 'stock_credit_conso',
+       'stock_credit_immobilier'],
+      dtype='object')
+'Inactivity_Months','flux_crediteur','decouvert','stock_decouver','credit_immobilier','stock_credit_immobilier','Compte_courant','stock_Compte_courant',
+ 'flux_debiteur',placement
+X3 = X.drop(['Inactivity_Months','stock_decouver','stock_credit_immobilier','stock_Compte_courant','Epargne','Relationship_Duration_Months','BANK_INTERNET','flux_crediteur','flux_debiteur','stock_Epargne','Segments_od'], axis = 1)
+corr_mat(X3)
+No description has been provided for this image
+X.columns
+Index(['Segments_od', 'Relationship_Duration_Months', 'Inactivity_Months',
+       'Gender_Code', 'Marketing_Income_Amt', 'age', 'eligible_ppo',
+       'BANK_INTERNET', 'decouvert', 'credit_immobilier', 'Compte_courant',
+       'Placement', 'Epargne', 'flux_debiteur', 'flux_crediteur',
+       'stock_carte', 'stock_decouver', 'stock_Compte_courant',
+       'stock_Placement', 'stock_Epargne', 'stock_credit_conso',
+       'stock_credit_immobilier'],
+      dtype='object')
+['Segments_od', 'Relationship_Duration_Months'
+       'Gender_Code', 'Marketing_Income_Amt', 'age', 'eligible_ppo',
+       'BANK_INTERNET', 'decouvert', 'credit_immobilier', 'Compte_courant',
+       'Placement', 'flux_debiteur'
+       'stock_carte', 
+        'stock_Epargne', 
+       'stock_credit_immobilier'],
+corr_mat(X1)
+No description has been provided for this image
+### caractéristique pertinente
+ 
+df.columns
+Index(['Segments_od', 'Relationship_Duration_Months', 'Inactivity_Months',
+       'Gender_Code', 'Marketing_Income_Amt', 'age', 'eligible_ppo',
+       'BANK_INTERNET', 'decouvert', 'credit_consommation',
+       'credit_immobilier', 'Compte_courant', 'Placement', 'Epargne',
+       'flux_debiteur', 'flux_crediteur', 'stock_carte', 'stock_decouver',
+       'stock_Compte_courant', 'stock_Placement', 'stock_Epargne',
+       'stock_credit_conso', 'stock_credit_immobilier'],
+      dtype='object')
+var=['Segments_od', 'Relationship_Duration_Months', 
+       'Gender_Code', 'Marketing_Income_Amt', 'age', 'eligible_ppo',
+       'BANK_INTERNET', 'decouvert', 'credit_consommation',
+        'Compte_courant', 'Placement', 'Epargne'
+       , 'stock_carte',  'stock_Epargne']
+       
+data = df[var]
+Construction de variables
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+# train et test 
+# Séparation des données en ensembles d'entraînement et de test
+y = data['credit_consommation']
+X = data.drop('credit_consommation', axis=1)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+from imblearn.over_sampling import SMOTE
+# Rééquilibrage de la variable cible dans l'ensemble d'entraînement
+smote = SMOTE(k_neighbors=1)
+X_train, y_train = smote.fit_resample(X_train, y_train)
+# Compter le nombre d'occurrences pour chaque valeur de la variable cible
+counts = y_train.value_counts()
+
+# Définir les couleurs pour chaque barre (0 en rouge, 1 en vert)
+colors = ['C1', 'r']
+
+# Construction de l'histogramme pour la variable cible
+plt.figure(figsize=(6, 4))
+bars = plt.bar(counts.index, counts.values, color=colors, edgecolor='gray')
+
+# Ajouter les valeurs au-dessus de chaque barre
+for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
+
+# Configuration du graphique
+plt.title("Distribution de la variable cible 'credit_consommation'")
+plt.xlabel("Valeur de la variable cible credit_consommation")
+plt.ylabel("Nombre de clients")
+plt.xticks([0, 1])
+plt.show()
+No description has been provided for this image
+import matplotlib.pyplot as plt
+
+# Compter le nombre d'occurrences pour chaque valeur de la variable cible
+counts = y_train.value_counts()
+
+# Définir les labels et les couleurs
+labels = ['0', '1']
+colors = ['C1', 'r']
+
+# Construction du diagramme en secteurs
+plt.figure(figsize=(4, 4))
+plt.pie(counts, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'gray'})
+
+# Configuration du graphique
+plt.title("Répartition de la variable cible credit_consommation")
+plt.show()
+No description has been provided for this image
+import pandas as pd
+import numpy as np
+from summarytools import dfSummary
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold, cross_val_score
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, precision_score, recall_score, f1_score, roc_auc_score, roc_curve
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import BaggingClassifier, RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+import matplotlib.pyplot as plt
+# Définir les modèles à entraîner
+models = {
+    'Gradient Boosting': GradientBoostingClassifier(),
+    'Random Forest': RandomForestClassifier(),
+    'Decision Tree': DecisionTreeClassifier(),
+    'K-Nearest Neighbors': KNeighborsClassifier(),
+    'AdaBoost': AdaBoostClassifier(),
+    'Regression Logistique':LogisticRegression()
+}
+# Entraîner et évaluer chaque modèle
+for name, model in models.items():
+    print(f"Entraînement du modèle : {name}")
+    model.fit(X_train, y_train)  # Entraîner le modèle
+    y_pred = model.predict(X_test)  # Prédictions sur le jeu de test
+    y_prob = model.predict_proba(X_test)[:, 1]  # Probabilités pour la classe 1 (pour ROC-AUC)
+
+    # Évaluation des performances
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+    roc_auc = roc_auc_score(y_test, y_prob)
+    conf_matrix = confusion_matrix(y_test, y_pred)
+    class_report = classification_report(y_test, y_pred)
+    
+    print(f"\n{name} - Accuracy: {accuracy:.2f}")
+    print(f"Précision: {precision:.2f}")
+    print(f"Rappel: {recall:.2f}")
+    print(f"F1-Score: {f1:.2f}")
+    print(f"AUC-ROC: {roc_auc:.2f}")
+    print(f"Matrice de confusion:\n{conf_matrix}")
+    print(f"Rapport de classification:\n{class_report}")
+    print("\n" + "="*60 + "\n")
+    
+    # Courbe ROC
+    fpr, tpr, _ = roc_curve(y_test, y_prob)
+    plt.plot(fpr, tpr, label=f'{name} (AUC = {roc_auc:.2f})')
+
+# Afficher la courbe ROC pour tous les modèles
+plt.plot([0, 1], [0, 1], 'k--')  # Courbe ROC d'une classification aléatoire
+plt.xlabel('Taux de faux positifs')
+plt.ylabel('Taux de vrais positifs')
+plt.title('Courbe ROC')
+plt.legend()
+plt.show()
+Entraînement du modèle : Gradient Boosting
+
+Gradient Boosting - Accuracy: 0.86
+Précision: 0.55
+Rappel: 0.90
+F1-Score: 0.68
+AUC-ROC: 0.95
+Matrice de confusion:
+[[130272  22163]
+ [  3173  27168]]
+Rapport de classification:
+              precision    recall  f1-score   support
+
+           0       0.98      0.85      0.91    152435
+           1       0.55      0.90      0.68     30341
+
+    accuracy                           0.86    182776
+   macro avg       0.76      0.88      0.80    182776
+weighted avg       0.91      0.86      0.87    182776
+
+
+============================================================
+
+Entraînement du modèle : Random Forest
+
+Random Forest - Accuracy: 0.90
+Précision: 0.65
+Rappel: 0.81
+F1-Score: 0.72
+AUC-ROC: 0.94
+Matrice de confusion:
+[[139418  13017]
+ [  5718  24623]]
+Rapport de classification:
+              precision    recall  f1-score   support
+
+           0       0.96      0.91      0.94    152435
+           1       0.65      0.81      0.72     30341
+
+    accuracy                           0.90    182776
+   macro avg       0.81      0.86      0.83    182776
+weighted avg       0.91      0.90      0.90    182776
+
+
+============================================================
+
+Entraînement du modèle : Decision Tree
+
+Decision Tree - Accuracy: 0.88
+Précision: 0.63
+Rappel: 0.69
+F1-Score: 0.66
+AUC-ROC: 0.81
+Matrice de confusion:
+[[140175  12260]
+ [  9394  20947]]
+Rapport de classification:
+              precision    recall  f1-score   support
+
+           0       0.94      0.92      0.93    152435
+           1       0.63      0.69      0.66     30341
+
+    accuracy                           0.88    182776
+   macro avg       0.78      0.80      0.79    182776
+weighted avg       0.89      0.88      0.88    182776
+
+
+============================================================
+
+Entraînement du modèle : K-Nearest Neighbors
+
+K-Nearest Neighbors - Accuracy: 0.79
+Précision: 0.42
+Rappel: 0.70
+F1-Score: 0.53
+AUC-ROC: 0.82
+Matrice de confusion:
+[[123401  29034]
+ [  9151  21190]]
+Rapport de classification:
+              precision    recall  f1-score   support
+
+           0       0.93      0.81      0.87    152435
+           1       0.42      0.70      0.53     30341
+
+    accuracy                           0.79    182776
+   macro avg       0.68      0.75      0.70    182776
+weighted avg       0.85      0.79      0.81    182776
+
+
+============================================================
+
+Entraînement du modèle : AdaBoost
+
+AdaBoost - Accuracy: 0.85
+Précision: 0.53
+Rappel: 0.87
+F1-Score: 0.66
+AUC-ROC: 0.94
+Matrice de confusion:
+[[129115  23320]
+ [  3944  26397]]
+Rapport de classification:
+              precision    recall  f1-score   support
+
+           0       0.97      0.85      0.90    152435
+           1       0.53      0.87      0.66     30341
+
+    accuracy                           0.85    182776
+   macro avg       0.75      0.86      0.78    182776
+weighted avg       0.90      0.85      0.86    182776
+
+
+============================================================
+
+Entraînement du modèle : Regression Logistique
+
+Regression Logistique - Accuracy: 0.75
+Précision: 0.38
+Rappel: 0.85
+F1-Score: 0.53
+AUC-ROC: 0.87
+Matrice de confusion:
+[[110836  41599]
+ [  4688  25653]]
+Rapport de classification:
+              precision    recall  f1-score   support
+
+           0       0.96      0.73      0.83    152435
+           1       0.38      0.85      0.53     30341
+
+    accuracy                           0.75    182776
+   macro avg       0.67      0.79      0.68    182776
+weighted avg       0.86      0.75      0.78    182776
+
+
+============================================================
+
+No description has been provided for this image
+# non équilibrée
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+caractéristique_non_pertinentes = [
+print("\nRecursive Feature Elimination: \nMeilleures caractéristiques:", data.feature_names[np.where(rfe.support_)[0]], "\nMeilleur score:", rfe.grid_scores_.max())
+Analyse de fond
+for col in  df.select_dtypes(include=['int']) :
+    plt.figure()
+    sns.histplot(df[col])
+for col in  df.select_dtypes(include=['object']) :
+    plt.figure()
+    df[col].value_counts().plot.pie()
+No description has been provided for this image
+No description has been provided for this image
+No description has been provided for this image
+for col in  df.select_dtypes(include=['float']) :
+    plt.figure()
+    sns.displot(df[col])
+float_df = df.select_dtypes(include=['float']).columns
+int_df = df.select_dtypes(include=['int']).columns
+caract_df = df.select_dtypes(include=['object']).columns
+Traitement des variables manquantes
+df.isnull().sum().unique()
+array([   0, 1369])
+import seaborn as sns
+plt.figure(figsize = (20,10))
+sns.heatmap(df.isna(), cbar = False)
+df= df.fillna(0)
+df.dtypes.unique()
+array([dtype('O'), dtype('float64'), dtype('int64')], dtype=object)
+Détecter les variables aberrantes
+df[float_df].describe()
+Relationship_Duration_Months	Marketing_Income_Amt	age	mtn_decouver	encours_Compte_courant_lc	encours_Placement_lc	encours_Epargne_lc	encours_PPO_lc	encours_PPI	mtn_flux_debiteur	mtn_flux_crediteur
+count	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253
+mean	132	353267	43	16929	556011	229331	1120450	757725	149	190416	2062035
+std	136	2315500	16	1618738	7860849	11956965	8378026	3326143	5971	2328287	10602274
+min	0	0	0	0	-1125023268	0	-6447985	-13688519	0	0	0
+25%	36	50000	32	0	0	0	0	0	0	0	0
+50%	79	150000	41	0	0	0	27600	0	0	0	78110
+75%	184	323319	52	0	53715	0	608225	0	0	0	1985777
+max	999	1248000000	124	1125023268	1691748111	5000000000	3500000000	687867417	2307457	616134612	1740852896
+import seaborn as sns
+import matplotlib.pyplot as plt
+%matplotlib inline 
+
+def boxplot(df,liste):
+    for feature in liste:
+        plt.figure(figsize=(6,4))
+        sns.boxplot(df[feature])
+        plt.title(f'Boxplot de { feature}')
+        plt.show()
+boxplot(df,float_df)
+def detecter_valeurs_aberrantes(df, colonnes):
+    for col in colonnes:
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        borne_inferieure = Q1 - 1.5 * IQR
+        borne_superieure = Q3 + 1.5 * IQR
+        df[(df[col] >= borne_inferieure) & (df[col] <= borne_superieure)]
+    return df
+detecter_valeurs_aberrantes(df, float_df)
+def median_valeurs_aberrantes(df, colonnes):
+    for col in colonnes:
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        borne_inferieure = Q1 - 1.5 * IQR
+        borne_superieure = Q3 + 1.5 * IQR
+        # Remplacer les valeurs aberrantes par la médiane
+        median = df[col].median()
+        df.loc[df[col]<borne_inferieure,col] = median
+        df.loc[df[col]>borne_superieure,col] = median
+        #df = df[(df[col] >= borne_inferieure) & (df[col] <= borne_superieure)]
+    return df
+df = median_valeurs_aberrantes(df, float_df)
+df[float_df].describe()
+Relationship_Duration_Months	Marketing_Income_Amt	age	mtn_decouver	encours_Compte_courant_lc	encours_Placement_lc	encours_Epargne_lc	encours_PPO_lc	encours_PPI	mtn_flux_debiteur	mtn_flux_crediteur
+count	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253	609253
+mean	107	178371	42	0	2774	0	172373	0	0	0	755337
+std	98	154416	15	0	24598	0	336007	0	0	0	1166150
+min	0	0	2	0	-80567	0	-855699	0	0	0	0
+25%	36	50000	32	0	0	0	0	0	0	0	0
+50%	79	150000	41	0	0	0	27600	0	0	0	78110
+75%	152	250000	52	0	0	0	123834	0	0	0	1342000
+max	406	733230	82	0	134284	0	1520557	0	0	0	4964245
+Target / int_df
+presence_PPO = df[df['flag_PPO']==1]
+absence_PPO = df[df['flag_PPO']==0]
+sns.countplot(x = 'Gender_Code', hue ='flag_PPO', data= df)
+sns.countplot(x = 'Gender_Code', hue ='flag_PPO', data= df)
+<Axes: xlabel='Gender_Code', ylabel='count'>
+No description has been provided for this image
+sns.countplot(x = 'Gender_Code', hue ='flag_PPO', data= df)
+<Axes: xlabel='age', ylabel='count'>
+No description has been provided for this image
+### 1. **Visualisation de Variables Catégorielles :**
+
+#### a) Diagrammes en barres :
+#Pour chaque variable catégorielle, vous pouvez tracer un diagramme en barres pour voir la répartition des catégories en fonction de la variable cible.
+
+#```python
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Exemple avec la variable 'gender'
+plt.figure(figsize=(8, 6))
+sns.countplot(x='Gender_Code', hue='flag_PPO', data=df, palette='Set2')
+plt.title("Répartition du genre en fonction de la variable cible 'has_product'")
+plt.xlabel("Genre")
+plt.ylabel("Nombre de clients")
+plt.show()
+No description has been provided for this image
+pd.crosstab(df['eligible_ppo'], df['flag_PPO'], normalize='index').plot(kind='bar', stacked=True, color=['orange', 'blue'], edgecolor='black')
+plt.title("Distribution du genre en fonction de la variable cible")
+plt.xlabel("Genre")
+plt.ylabel("Proportion")
+plt.legend(["Pas de produit", "A un produit"], title="Variable cible")
+plt.show()
+No description has been provided for this image
+plt.figure(figsize=(6, 4))
+sns.kdeplot(df['eligible_ppo'][df['flag_PPO'] == 0], shade=True, color='red', label='presence PPO')
+sns.kdeplot(df['eligible_ppo'][df['flag_PPO'] == 1], shade=True, color='blue', label='absence PPO')
+plt.title("Densité de 'eligible' en fonction de la variable cible PPO")
+plt.xlabel("eligible")
+plt.ylabel("Densité")
+plt.legend()
+plt.show()
+No description has been provided for this image
+plt.figure(figsize=(8, 6))
+sns.kdeplot(df['flag_PPI'][df['flag_PPO'] == 0], shade=True, color='red', label='Pas de produit')
+sns.kdeplot(df['flag_PPI'][df['flag_PPO'] == 1], shade=True, color='blue', label='A un produit')
+plt.title("Densité de 'income' en fonction de la variable cible 'has_product'")
+plt.xlabel("Income")
+plt.ylabel("Densité")
+plt.legend()
+plt.show()
+No description has been provided for this image
+# Exemple avec la variable 'gender'
+plt.figure(figsize=(4, 4))
+sns.countplot(x='flag_PPI', hue='flag_PPO', data=df, palette='Set2')
+plt.title("Répartition du genre en fonction de la variable cible 'has_p")
+plt.xlabel("PPI")
+plt.ylabel("Nombre de clients")
+plt.show()
+No description has been provided for this image
+'Marketing_Income_Amt'
+array([0, 1])
+# Exemple avec la variable 'gender'
+plt.figure(figsize=(4, 4))
+sns.countplot(x='Segments_od', hue='flag_PPO', data=df, palette='Set1')
+plt.title("Répartition du genre en fonction de la variable cible 'PPO'")
+plt.xlabel("Segment")
+plt.ylabel("Nombre de clients")
+plt.show()
+No description has been provided for this image
+# Exemple avec la variable 'gender'
+plt.figure(figsize=(4, 4))
+sns.countplot(x='Marketing_Income_Amt', hue='flag_PPO', data=df, palette='Set1')
+plt.title("Répartition du genre en fonction de la variable cible 'PPO'")
+plt.xlabel('Marketing_Income_Amt')
+plt.ylabel("Nombre de clients")
+plt.show()
+target = df['flag_PPO']
+import seaborn as sns
+for col in targ_int :
+    plt.figure()
+    sns.histplot(x=df[col], hue='flag_PPO')
+    plt.legend()
+float_df
+Index(['Relationship_Duration_Months', 'Marketing_Income_Amt', 'age',
+       'mtn_decouver', 'encours_Compte_courant_lc', 'encours_Placement_lc',
+       'encours_Epargne_lc', 'encours_PPO_lc', 'encours_PPI',
+       'mtn_flux_debiteur', 'mtn_flux_crediteur'],
+      dtype='object')
+caract_df
+Index(['Segments_od', 'Profile_Code_Description', 'Gender_Code'], dtype='object')
+df =df.drop('Profile_Code_Description',axis=1)
+selection des variables
+num_df = df.select_dtypes(include=['float', 'int']).columns
+corr_mat(df[num_df])
+No description has been provided for this image
+def corr_mat(df) : 
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+    plt.title('Carte de chaleur des corrélations', fontsize= 15, fontweight = 'bold')
+    plt.show()
+corr_mat(df[float_df])
+No description has been provided for this image
+corr_mat(df[int_df])
+No description has been provided for this image
+from sklearn.preprocessing import LabelEncoder
+encoder = LabelEncoder()
+df["Gender_Code"] = encoder.fit_transform(df["Gender_Code"])
+df["Segments_od"] = encoder.fit_transform(df["Segments_od"])
+df.head()
+Segments_od	Relationship_Duration_Months	Inactivity_Months	Gender_Code	Marketing_Income_Amt	age	eligible_ppo	flag_BANK_INTERNET	flag_PPO	flag_PPI	flag_Compte_courant	flag_Placement	flag_Epargne	flag_flux_debiteur	flag_flux_crediteur	stock_carte	stock_connect	stock_decouver	mtn_decouver	stock_Compte_courant	encours_Compte_courant_lc	stock_Placement	encours_Placement_lc	stock_Epargne	encours_Epargne_lc	stock_PPO	encours_PPO_lc	stock_PPI	encours_PPI	nb_flux_debiteur	nb_flux_crediteur	mtn_flux_debiteur	mtn_flux_crediteur
+0	0	297	0	1	0	56	0	1	1	0	1	0	1	1	1	5	1	1	0	1	0	0	0	2	27600	2	0	0	0	22	17	0	78110
+1	1	297	0	0	321879	68	1	0	0	0	1	0	0	0	1	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	6	0	1993794
+2	3	297	0	0	150000	51	1	1	0	1	1	0	1	1	1	1	1	0	0	1	0	0	0	2	27600	0	0	1	0	9	12	0	78110
+3	3	297	0	1	150000	52	1	1	1	0	1	0	1	1	1	2	1	1	0	1	0	0	0	3	27600	1	0	0	0	10	14	0	78110
+4	1	297	21	1	250000	73	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+#selecttFromModelfrom klearn
+from sklearn.feature_selection import SelectFromModel
+from sklearn.linear_model import SGDClassifier
+y= df['flag_PPO']
+X = df.drop('flag_PPO', axis=1)
+selector = SelectFromModel(SGDClassifier(random_state =0), threshold = 'mean')
+selector.fit_transform(X,y)
+selector.get_support()
+selector.estimator_.coef_                           
+array([[-4.88428843e+02,  2.13232240e+03, -7.92938570e+03,
+        -1.41612102e+02,  4.95167743e+00, -1.28067470e+04,
+        -4.17428329e+00,  1.18798174e+02,  3.17469008e+00,
+        -1.15841455e+01, -4.24550733e+00,  1.03098982e+02,
+        -4.77624604e+01, -1.67248243e+02, -9.80178679e+00,
+         1.21735429e+02,  5.36936540e+02,  0.00000000e+00,
+         1.55890202e+00,  0.00000000e+00, -1.30342312e+01,
+         0.00000000e+00,  8.22498007e+02, -8.55465671e+00,
+         1.21088332e+03,  0.00000000e+00,  3.28022364e+00,
+         0.00000000e+00,  3.20861077e+02,  1.54155030e+03,
+         0.00000000e+00, -2.76666087e+01]])
+from sklearn.feature_selection import RFE, RFECV
+from sklearn.preprocessing import LabelEncoder,StandardScaler
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, AdaBoostClassifier
+# Normalisation des données
+scaler = StandardScaler()
+
+# Définir le modèle de base
+model = RandomForestClassifier(random_state=42)
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import RFECV
+from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.svm import SVC
+# Sélection Récursive des Caractéristiques (RFE)
+svc = SVC(kernel='linear', random_state=42)
+selector = RFE(svc, n_features_to_select=10, step=1)
+# Entraîner le pipeline
+pipeline.fit(X, y)
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+Cell In[59], line 2
+      1 # Entraîner le pipeline
+----> 2 pipeline.fit(X, y)
+
+NameError: name 'pipeline' is not defined
+# Créer un pipeline pour combiner la normalisation et le RFECV
+pipeline = Pipeline([
+    ('scaler', scaler),
+    ('rfecv', rfecv)
+])
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+Cell In[60], line 4
+      1 # Créer un pipeline pour combiner la normalisation et le RFECV
+      2 pipeline = Pipeline([
+      3     ('scaler', scaler),
+----> 4     ('rfecv', rfecv)
+      5 ])
+
+NameError: name 'rfecv' is not defined
+# Obtenir les résultats
+selected_features = X.columns[rfecv.support_]
+ranking = rfecv.ranking_
+# Afficher les caractéristiques sélectionnées et leur importance
+print("Caractéristiques sélectionnées :\n", selected_features)
+print("Rang des caractéristiques :\n", ranking)
+print(f"Nombre optimal de caractéristiques sélectionnées : {rfecv.n_features_}")
+  Cell In[45], line 1
+    selector = RFECV((SGDClassifier(random_state=0), step==1, min_features_to_select=2, cv=5)
+                                                              ^
+SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?
+ 
+ 
+ 
