@@ -1,0 +1,59 @@
+Pour visualiser les relations entre la variable cible et les autres variables, on peut utiliser différents types de graphiques selon le type de chaque variable (numérique ou catégorielle). Voici quelques exemples de visualisations couramment utilisées :
+
+### 1. **Histogramme ou diagramme en barres pour les variables catégorielles**
+   - Si vous avez des variables catégorielles, vous pouvez utiliser un diagramme en barres pour comparer la distribution des catégories en fonction de la variable cible.
+
+### Exemple avec `sexe` et `has_product` :
+
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8, 6))
+sns.countplot(x='gender', hue='has_product', data=df, palette='Set2')
+plt.title("Distribution de 'has_product' en fonction du 'gender'")
+plt.xlabel("Sexe")
+plt.ylabel("Nombre de clients")
+plt.show()
+```
+
+### 2. **Boxplot pour les variables numériques**
+   - Si vous avez des variables numériques, un boxplot est utile pour visualiser la distribution de ces variables en fonction de la variable cible.
+
+### Exemple avec `balance` et `has_product` :
+
+```python
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='has_product', y='balance', data=df, palette='Set2')
+plt.title("Distribution de 'balance' en fonction de la variable cible 'has_product'")
+plt.xlabel("Variable cible")
+plt.ylabel("Balance")
+plt.grid(True, which='both', axis='y', linestyle='--', linewidth=0.5, color='gray')
+plt.show()
+```
+
+### 3. **Pairplot pour toutes les variables numériques**
+   - Un pairplot permet de visualiser les relations entre plusieurs variables numériques en fonction de la variable cible.
+
+### Exemple avec plusieurs variables numériques et `has_product` :
+
+```python
+sns.pairplot(df, hue='has_product', palette='Set2')
+plt.suptitle("Visualisation des relations entre les variables numériques et la variable cible", y=1.02)
+plt.show()
+```
+
+### 4. **Heatmap pour la corrélation entre les variables numériques et la variable cible**
+   - Une heatmap est utile pour visualiser les corrélations entre les variables numériques et la variable cible.
+
+### Exemple de heatmap pour toutes les variables numériques :
+
+```python
+plt.figure(figsize=(10, 8))
+corr = df.corr()
+sns.heatmap(corr, annot=True, cmap='coolwarm', center=0)
+plt.title("Heatmap des corrélations entre les variables")
+plt.show()
+```
+
+Ces visualisations vous aideront à comprendre les relations entre la variable cible et les autres variables de votre jeu de données.
