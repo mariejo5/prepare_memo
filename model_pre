@@ -1,0 +1,51 @@
+from sklearn.metrics import precision_score, recall_score, f1_score
+
+models_classification = [
+    ("Regression Logistique", LogisticRegression(max_iter=1000), {'C':[0.001, 0.01, 0.1, 1, 10, 100]}),
+    ("Arbre de décision", DecisionTreeClassifier(), {'max_depth': [1, 5, 10, 15, 20]}),
+    ("Bagging KPPV", BaggingClassifier(estimator=KNeighborsClassifier(n_neighbors=10)), {'n_estimators': [50, 100, 150, 200, 300]}),
+    ("Random Forest", RandomForestClassifier(), {'n_estimators': [10, 50, 100, 150,200], 'max_depth':[2,3,4,6,8]}),
+    ("XG Boost", XGBClassifier(), {'n_estimators': [50, 100, 150, 200, 300], 'max_depth': [3, 4, 5, 6, 7]}),
+    ("ADA Boost", AdaBoostClassifier(), {'n_estimators': [50, 100, 150, 200, 300], 'learning_rate': [0.01, 0.1, 0.5, 1.0]}),
+    ("Gradient Boosting", GradientBoostingClassifier(), {'n_estimators': [50, 100, 150, 200, 300], 'max_depth': [3, 4, 5, 6, 7],}),
+    ("KPPV", KNeighborsClassifier(), {'n_neighbors': [1, 3, 5, 7, 10]})
+]
+
+def evaluation_model(X, Y, model, param_grid, num_folds=5):
+    # Utilisation de KFold pour la validation croisée
+    kfold = KFold(n_splits=num_folds, shuffle=True, random_state=1234)
+
+    # Utilisation de GridSearchCV pour rechercher les meilleurs parametres avec la validation croisée (Première validation croisée)
+    grid_search = GridSearchCV(model, param_grid=param_grid, scoring='accuracy', cv=kfold)
+    grid_search.fit(X, Y)
+
+    best_model = grid_search.best_estimator_ # Meilleurs parametres
+
+    # Calcul de l'Accuracy moyen (Deuxième validation croisée)
+    accuracy_scores = cross_val_score(best_model, X, Y, scoring='accuracy', cv=kfold)
+    average_accuracy = accuracy_scores.mean()
+
+    return average_accuracy, best_model
+
+for name, model, param_grid in models_classification:
+    acc, best_model = evaluation_model(X_scaled, Y, model, param_grid)
+    
+    # Prédiction avec le modèle optimisé
+    y_pred = best_model.predict(X_scaled)
+    
+    # Calcul des métriques
+    precision = precision_score(Y, y_pred, average='weighted')
+    recall = recall_score(Y, y_pred, average='weighted')
+    f1 = f1_score(Y, y_pred, average='weighted')
+    
+    print(f"Modele: {name}")
+    
+    # Récupérer les hyperparamètres spécifiés dans models_classification
+    params_specifie = {param: best_model.get_params()[param] for param in param_grid.keys()}
+    
+    print(f"Meilleurs Hyperparametres: {params_specifie}")
+    print(f"Accuracy: {acc:.2f}")
+    print(f"Précision: {precision:.2f}")
+    print(f"Rappel: {recall:.2f}")
+    print(f"F1-score: {f1:.2f}")
+    print("\n")
