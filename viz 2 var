@@ -1,0 +1,87 @@
+Pour visualiser les relations entre la variable cible et les autres variables, vous pouvez utiliser une variété de graphiques selon le type de variables. Voici quelques options supplémentaires que vous pouvez essayer :
+
+### 1. **Violin Plot pour les variables numériques**
+   - Un *violin plot* permet de visualiser la distribution des données en fonction de la variable cible, tout en montrant la densité de ces données.
+
+### Exemple avec `balance` et `has_product` :
+
+```python
+plt.figure(figsize=(8, 6))
+sns.violinplot(x='has_product', y='balance', data=df, palette='Set2')
+plt.title("Distribution de 'balance' en fonction de la variable cible 'has_product'")
+plt.xlabel("Variable cible")
+plt.ylabel("Balance")
+plt.grid(True, which='both', axis='y', linestyle='--', linewidth=0.5, color='gray')
+plt.show()
+```
+
+### 2. **Swarm Plot pour voir la densité des points individuels**
+   - Le *swarm plot* permet de voir les points individuels en répartissant ceux-ci horizontalement de manière à éviter leur chevauchement.
+
+### Exemple avec `balance` et `has_product` :
+
+```python
+plt.figure(figsize=(8, 6))
+sns.swarmplot(x='has_product', y='balance', data=df, palette='Set2')
+plt.title("Distribution des individus 'balance' en fonction de 'has_product'")
+plt.xlabel("Variable cible")
+plt.ylabel("Balance")
+plt.grid(True, which='both', axis='y', linestyle='--', linewidth=0.5, color='gray')
+plt.show()
+```
+
+### 3. **Bar Plot pour les moyennes des variables numériques par catégorie**
+   - Utiliser un *bar plot* permet de visualiser les moyennes des variables numériques en fonction de la variable cible.
+
+### Exemple avec `balance` et `has_product` :
+
+```python
+plt.figure(figsize=(8, 6))
+sns.barplot(x='has_product', y='balance', data=df, palette='Set2', estimator=np.mean)
+plt.title("Moyenne de 'balance' par catégorie de 'has_product'")
+plt.xlabel("Variable cible")
+plt.ylabel("Moyenne de Balance")
+plt.show()
+```
+
+### 4. **Strip Plot pour une visualisation simple des points**
+   - Le *strip plot* est similaire au *swarm plot* mais sans répartir les points horizontalement. Il est utilisé pour visualiser les valeurs réelles des points dans chaque catégorie.
+
+### Exemple avec `balance` et `has_product` :
+
+```python
+plt.figure(figsize=(8, 6))
+sns.stripplot(x='has_product', y='balance', data=df, palette='Set2', jitter=True)
+plt.title("Distribution des points 'balance' par 'has_product'")
+plt.xlabel("Variable cible")
+plt.ylabel("Balance")
+plt.show()
+```
+
+### 5. **Distribution Plot (distplot) pour visualiser les distributions des variables numériques**
+   - Un *distplot* permet de visualiser la distribution d'une variable continue, ce qui peut être utile pour analyser la distribution des variables numériques par rapport à la variable cible.
+
+### Exemple avec `balance` pour une seule catégorie `has_product = 1` :
+
+```python
+plt.figure(figsize=(8, 6))
+sns.histplot(df[df['has_product'] == 1]['balance'], kde=True, color='green')
+plt.title("Distribution de 'balance' pour ceux ayant un produit")
+plt.xlabel("Balance")
+plt.ylabel("Densité")
+plt.show()
+```
+
+### 6. **FacetGrid pour créer plusieurs sous-graphiques**
+   - Le *FacetGrid* permet de créer plusieurs sous-graphiques en fonction d'une ou plusieurs variables catégorielles.
+
+### Exemple avec `gender` et `has_product` :
+
+```python
+g = sns.FacetGrid(df, col="has_product", row="gender", margin_titles=True, height=4, aspect=1.5)
+g.map(sns.histplot, "balance", kde=False)
+g.fig.suptitle("Distribution de 'balance' par sexe et produit", y=1.02)
+plt.show()
+```
+
+Ces visualisations permettent de mieux comprendre les relations entre les différentes variables et la variable cible, en utilisant des techniques visuelles adaptées à chaque type de donnée.
