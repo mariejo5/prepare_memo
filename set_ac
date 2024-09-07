@@ -1,0 +1,25 @@
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Ajuster la taille de la figure
+plt.figure(figsize=(10, 6))
+
+# Créer un barplot pour représenter la moyenne du produit par secteur d'activité
+ax = sns.barplot(x='secteur_activite', y='has_product', data=df, palette='viridis', estimator=sum)
+
+# Ajouter les valeurs entières au-dessus de chaque barre
+for p in ax.patches:
+    height = p.get_height()
+    ax.annotate(f'{int(height)}',  # Affichage des valeurs en entier
+                (p.get_x() + p.get_width() / 2., height), 
+                ha = 'center', 
+                va = 'center', 
+                xytext = (0, 5), 
+                textcoords = 'offset points')
+
+# Configuration du graphique
+plt.title("Distribution du secteur d'activité en fonction de la variable cible 'has_product'")
+plt.xlabel("Secteur d'activité")
+plt.ylabel("Nombre de clients avec produit")
+plt.xticks(rotation=45)  # Rotation des étiquettes de l'axe x si nécessaire
+plt.show()
