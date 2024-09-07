@@ -1,0 +1,16 @@
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Ajuster la taille de la figure
+plt.figure(figsize=(10, 6))
+
+# Créer un nuage de points pour représenter la relation entre le secteur d'activité et la variable cible
+sns.scatterplot(x='secteur_activite', y='has_product', data=df, hue='gender', style='gender', palette='coolwarm', s=100)
+
+# Configuration du graphique
+plt.title("Nuage de points de la variable cible 'has_product' par secteur d'activité")
+plt.xlabel("Secteur d'activité")
+plt.ylabel("Produit bancaire (0 = Non, 1 = Oui)")
+plt.xticks(rotation=45)  # Rotation des étiquettes de l'axe x si nécessaire
+plt.grid(True)
+plt.show()
