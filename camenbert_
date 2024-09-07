@@ -1,0 +1,17 @@
+import matplotlib.pyplot as plt
+
+# Diviser les données en deux groupes en fonction de la variable cible
+revenu_avec_produit = df[df['has_product'] == 1]['revenu']
+revenu_sans_produit = df[df['has_product'] == 0]['revenu']
+
+# Calculer la distribution en pourcentage pour chaque groupe
+labels = ['Avec Produit', 'Sans Produit']
+sizes = [revenu_avec_produit.sum(), revenu_sans_produit.sum()]
+colors = ['#ff9999','#66b3ff']
+explode = (0.1, 0)  # "explose" le premier segment
+
+# Création du camembert
+plt.figure(figsize=(8, 6))
+plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
+plt.title("Répartition du revenu en fonction de la variable cible 'has_product'")
+plt.show()
