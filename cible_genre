@@ -1,0 +1,20 @@
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8, 6))
+ax = sns.countplot(x='gender', hue='has_product', data=df, palette='Set2')
+
+# Ajouter les valeurs au-dessus de chaque barre
+for p in ax.patches:
+    height = p.get_height()
+    ax.annotate(f'{height}', 
+                (p.get_x() + p.get_width() / 2., height), 
+                ha = 'center', 
+                va = 'center', 
+                xytext = (0, 5), 
+                textcoords = 'offset points')
+
+plt.title("Distribution de 'has_product' en fonction du 'gender'")
+plt.xlabel("Sexe")
+plt.ylabel("Nombre de clients")
+plt.show()
