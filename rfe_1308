@@ -1,0 +1,17 @@
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LogisticRegression
+
+# Utilisation de la régression logistique pour l'élimination récursive
+model = LogisticRegression(max_iter=1000)
+
+# Initialisation de RFE pour sélectionner les 5 meilleures variables
+rfe = RFE(model, n_features_to_select=5)
+
+# Entraîner RFE
+fit = rfe.fit(X_scaled, Y)
+
+# Afficher les variables sélectionnées
+print("Variables sélectionnées :")
+for i in range(len(fit.support_)):
+    if fit.support_[i]:
+        print(f"Variable: {X.columns[i]}")
