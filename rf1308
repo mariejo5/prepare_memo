@@ -1,0 +1,15 @@
+from sklearn.ensemble import RandomForestClassifier
+
+# Créer un modèle Random Forest
+rf = RandomForestClassifier()
+
+# Entraînement du modèle
+rf.fit(X_scaled, Y)
+
+# Importance des variables
+importances = rf.feature_importances_
+indices = importances.argsort()[::-1]
+
+# Afficher les variables triées par importance
+for i in indices:
+    print(f"Variable: {X.columns[i]}, Importance: {importances[i]}")
