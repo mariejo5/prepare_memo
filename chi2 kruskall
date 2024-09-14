@@ -1,0 +1,63 @@
+Les tests de Chi-2 et de Kruskal-Wallis sont deux méthodes statistiques utilisées pour analyser les relations entre les variables.
+
+### 1. **Test de Chi-2 (Chi-Square Test)**
+
+Le test de Chi-2 est utilisé pour vérifier l'indépendance entre deux variables catégorielles. Il mesure si la distribution des variables observées s'écarte significativement de ce qui serait attendu si les deux variables étaient indépendantes.
+
+#### Exemple d'application sur des variables catégorielles :
+
+Imaginons que nous voulions tester l'indépendance entre `has_product` et `gender`.
+
+```python
+from scipy.stats import chi2_contingency
+
+# Créer une table de contingence entre 'has_product' et 'gender'
+contingency_table = pd.crosstab(df['has_product'], df['gender'])
+
+# Appliquer le test de Chi-2
+chi2, p, dof, expected = chi2_contingency(contingency_table)
+
+# Afficher les résultats
+print(f"Chi2 Statistique : {chi2}")
+print(f"P-valeur : {p}")
+print(f"Degrés de liberté : {dof}")
+
+# Interpréter le résultat
+if p < 0.05:
+    print("Les variables 'has_product' et 'gender' sont dépendantes (rejeter l'hypothèse nulle)")
+else:
+    print("Les variables 'has_product' et 'gender' sont indépendantes (ne pas rejeter l'hypothèse nulle)")
+```
+
+### 2. **Test de Kruskal-Wallis**
+
+Le test de Kruskal-Wallis est une alternative non paramétrique à l'ANOVA. Il est utilisé lorsque vous avez une variable dépendante numérique et une variable indépendante catégorielle, mais que les hypothèses de normalité ou d'homogénéité de variance ne sont pas respectées. Il compare les médianes des groupes.
+
+#### Exemple d'application sur des variables numériques :
+
+Supposons que nous voulions comparer la distribution de la variable `income` en fonction de la variable `has_product`.
+
+```python
+from scipy.stats import kruskal
+
+# Séparer les données en fonction de la variable 'has_product'
+group_0 = df[df['has_product'] == 0]['income']
+group_1 = df[df['has_product'] == 1]['income']
+
+# Appliquer le test de Kruskal-Wallis
+stat, p_value = kruskal(group_0, group_1)
+
+# Afficher les résultats
+print(f"Kruskal-Wallis Statistique : {stat}")
+print(f"P-valeur : {p_value}")
+
+# Interpréter le résultat
+if p_value < 0.05:
+    print("Il y a une différence significative entre les groupes (rejeter l'hypothèse nulle)")
+else:
+    print("Aucune différence significative entre les groupes (ne pas rejeter l'hypothèse nulle)")
+```
+
+### Résumé des applications :
+- Le **test de Chi-2** est utilisé pour tester l'indépendance entre deux variables **catégorielles**.
+- Le **test de Kruskal-Wallis** est utilisé pour comparer des groupes sur une variable **numérique** lorsque les hypothèses de normalité ne sont pas remplies.
