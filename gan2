@@ -1,0 +1,151 @@
+Rééquilibrer les données avec des modèles génératifs implique l'utilisation de techniques d'IA générative pour créer des échantillons synthétiques de la classe minoritaire afin d'équilibrer le jeu de données. Voici comment vous pouvez utiliser des modèles génératifs pour cette tâche :
+
+### 1. *Utilisation de GANs (Generative Adversarial Networks)*
+
+Les GANs sont un type de modèle génératif qui peut être utilisé pour générer des données synthétiques. Voici un aperçu de l'utilisation des GANs pour le rééchantillonnage :
+
+#### a. *Installation des Bibliothèques*
+Vous aurez besoin de la bibliothèque tensorflow ou pytorch pour utiliser les GANs. Voici un exemple d'installation avec TensorFlow :
+
+bash
+pip install tensorflow
+
+
+#### b. *Création du GAN*
+
+L'implémentation d'un GAN complet nécessite plusieurs étapes, mais voici un exemple simplifié avec TensorFlow/Keras :
+
+python
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers
+
+# Définir les générateurs et les discriminateurs
+def build_generator():
+    model = tf.keras.Sequential()
+    model.add(layers.Dense(128, activation='relu', input_dim=100))
+    model.add(layers.Dense(784, activation='sigmoid'))
+    model.add(layers.Reshape((28, 28, 1)))
+    return model
+
+def build_discriminator():
+    model = tf.keras.Sequential()
+    model.add(layers.Flatten(input_shape=(28, 28, 1)))
+    model.add(layers.Dense(128, activation='relu'))
+    model.add(layers.Dense(1, activation='sigmoid'))
+    return model
+
+# Construction du GAN
+generator = build_generator()
+discriminator = build_discriminator()
+
+discriminator.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+gan = tf.keras.Sequential([generator, discriminator])
+gan.compile(optimizer='adam', loss='binary_crossentropy')
+
+# Entraînement du GAN
+def train_gan(gan, generator, discriminator, epochs, batch_size):
+    for epoch in range(epochs):
+        noise = np.random.normal(0, 1, (batch_size, 100))
+        generated_images = generator.predict(noise)
+        
+        # Entraîner le discriminateur
+        real_images = np.random.rand(batch_size, 28, 28, 1)  # Remplacer par vos vraies images de classe minoritaire
+        labels_real = np.ones((batch_size, 1))
+        labels_fake = np.zeros((batch_size, 1))
+        
+        d_loss_real = discriminator.train_on_batch(real_images, labels_real)
+        d_loss_fake = discriminator.train_on_batch(generated_images, labels_fake)
+        
+        # Entraîner le générateur
+        noise = np.random.normal(0, 1, (batch_size, 100))
+        g_loss = gan.train_on_batch(noise, labels_real)
+        
+        print(f'Epoch {epoch+1}/{epochs} | D Loss Real: {d_loss_real[0]} | D Loss Fake: {d_loss_fake[0]} | G Loss: {g_loss}')
+
+# Exemple d'entraînement
+train_gan(gan, generator, discriminator, epochs=10000, batch_size=64)
+
+
+#### c. *Génération de Données Synthétiques*
+
+Après l'entraînement du GAN, utilisez le générateur pour créer des échantillons de la classe minoritaire :
+
+python
+noise = np.random.normal(0, 1, (1000, 100))  # Générer 1000 échantillons
+synthetic_data = generator.predict(noise)
+
+
+### 2. *Utilisation de Variational Autoencoders (VAEs)*
+
+Les VAEs sont un autre type de modèle génératif qui peut également être utilisé pour générer des données synthétiques.
+
+#### a. *Installation des Bibliothèques*
+
+bash
+pip install tensorflow
+
+
+#### b. *Création du VAE*
+
+Voici un exemple simplifié de VAE avec TensorFlow/Keras :
+
+python
+import tensorflow as tf
+from tensorflow.keras import layers
+
+# Définir l'encodeur
+def build_encoder():
+    inputs = layers.Input(shape=(784,))
+    x = layers.Dense(128, activation='relu')(inputs)
+    z_mean = layers.Dense(2)(x)
+    z_log_var = layers.Dense(2)(x)
+    return tf.keras.Model(inputs, [z_mean, z_log_var])
+
+# Définir le décodeur
+def build_decoder():
+    inputs = layers.Input(shape=(2,))
+    x = layers.Dense(128, activation='relu')(inputs)
+    outputs = layers.Dense(784, activation='sigmoid')(x)
+    return tf.keras.Model(inputs, outputs)
+
+# Construction du VAE
+encoder = build_encoder()
+decoder = build_decoder()
+
+# Entraînement et génération de données sont similaires à l'exemple GAN
+
+# Exemple de génération
+z = np.random.normal(0, 1, (1000, 2))  # Générer 1000 échantillons
+synthetic_data = decoder.predict(z)
+
+
+### 3. *Intégration avec les Modèles de Machine Learning*
+
+Après avoir généré des données synthétiques avec GANs ou VAEs, vous pouvez les combiner avec vos données réelles pour entraîner vos modèles de machine learning :
+
+python
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+
+# Combinaison des données réelles et synthétiques
+X_combined = np.concatenate([X_real, synthetic_data], axis=0)
+y_combined = np.concatenate([y_real, np.ones(synthetic_data.shape[0])], axis=0)  # Assumez que les données synthétiques sont pour la classe minoritaire
+
+# Séparation des données en ensemble d'entraînement et de test
+X_train, X_test, y_train, y_test = train_test_split(X_combined, y_combined, test_size=0.2, random_state=42)
+
+# Entraînement du modèle
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+# Évaluation du modèle
+y_pred = model.predict(X_test)
+print(classification_report(y_test, y_pred))
+
+
+### Conclusion
+
+En utilisant des modèles génératifs comme les GANs ou VAEs pour générer des échantillons synthétiques de la classe minoritaire, vous pouvez rééquilibrer vos données et améliorer les performances des modèles de machine learning sur des ensembles de données déséquilibrés. Assurez-vous de bien évaluer les performances des modèles générés pour choisir la meilleure approche pour votre tâche spécifique.
