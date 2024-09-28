@@ -1,0 +1,120 @@
+Pour sélectionner les variables pertinentes par rapport à ta variable cible, il existe plusieurs techniques, allant de l'analyse statistique de base à l'utilisation de modèles de machine learning. Voici quelques méthodes courantes que tu peux utiliser :
+
+### 1. **Analyse de corrélation pour les variables numériques**
+La matrice de corrélation permet d'identifier les variables qui sont fortement corrélées avec la variable cible (pour les variables numériques uniquement).
+
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Calculer la matrice de corrélation
+corr_matrix = df.corr()
+
+# Afficher la corrélation de chaque variable avec la variable cible
+corr_with_target = corr_matrix["appetence_credit"].sort_values(ascending=False)
+print(corr_with_target)
+
+# Visualiser la matrice de corrélation
+plt.figure(figsize=(10, 8))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title("Matrice de corrélation")
+plt.show()
+```
+
+### 2. **ANOVA (Analyse de variance) pour les variables catégorielles**
+Pour vérifier si les moyennes de différentes catégories sont significativement différentes par rapport à la variable cible.
+
+```python
+from scipy import stats
+
+# Exemple avec 'type_emploi'
+anova_result = stats.f_oneway(
+    df[df['type_emploi'] == 'CDI']['appetence_credit'],
+    df[df['type_emploi'] == 'CDD']['appetence_credit'],
+    df[df['type_emploi'] == 'Indépendant']['appetence_credit'],
+    df[df['type_emploi'] == 'Retraité']['appetence_credit']
+)
+print("ANOVA pour 'type_emploi' : ", anova_result)
+```
+
+### 3. **Chi-carré pour les variables catégorielles**
+Le test du chi-carré permet de mesurer l'association entre les variables catégorielles et la variable cible.
+
+```python
+from sklearn.feature_selection import chi2
+from sklearn.preprocessing import LabelEncoder
+
+# Encoder les variables catégorielles
+df_encoded = df.copy()
+for col in df_encoded.select_dtypes(include=['object']).columns:
+    df_encoded[col] = LabelEncoder().fit_transform(df_encoded[col])
+
+# Sélection des variables explicatives et de la variable cible
+X = df_encoded.drop(columns='appetence_credit')
+y = df_encoded['appetence_credit']
+
+# Calcul des scores du chi-carré
+chi_scores = chi2(X, y)
+chi_scores_df = pd.DataFrame({'Variable': X.columns, 'Chi2_Score': chi_scores[0], 'P_Value': chi_scores[1]})
+print(chi_scores_df.sort_values(by='Chi2_Score', ascending=False))
+```
+
+### 4. **Feature Importance avec Random Forest**
+L'importance des variables peut être évaluée en utilisant un modèle de Random Forest, qui attribue un score d'importance à chaque variable.
+
+```python
+from sklearn.ensemble import RandomForestClassifier
+
+# Entraîner un modèle Random Forest
+rf_model = RandomForestClassifier()
+rf_model.fit(X, y)
+
+# Importance des variables
+importances = rf_model.feature_importances_
+feature_importances = pd.DataFrame({'Variable': X.columns, 'Importance': importances})
+print(feature_importances.sort_values(by='Importance', ascending=False))
+```
+
+### 5. **Sélection RFE (Recursive Feature Elimination)**
+Utiliser l'algorithme RFE pour sélectionner les meilleures variables.
+
+```python
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LogisticRegression
+
+# Utilisation de RFE avec régression logistique
+model = LogisticRegression(max_iter=1000)
+rfe = RFE(model, n_features_to_select=5)
+fit = rfe.fit(X, y)
+
+# Afficher les variables sélectionnées
+selected_features = pd.DataFrame({'Variable': X.columns, 'RFE_Support': fit.support_, 'RFE_Ranking': fit.ranking_})
+print(selected_features[selected_features['RFE_Support'] == True])
+```
+
+### 6. **Analyse des p-values**
+Calculer les p-values pour évaluer la signification statistique des variables explicatives par rapport à la cible.
+
+```python
+import statsmodels.api as sm
+
+# Ajouter une constante à X pour l'interception
+X = sm.add_constant(X)
+
+# Modèle de régression logistique
+model = sm.Logit(y, X)
+result = model.fit()
+
+# Afficher les p-values
+print(result.summary())
+```
+
+### Résumé des techniques utilisées :
+1. **Corrélation** : Pour les variables numériques.
+2. **ANOVA** : Pour les variables catégorielles.
+3. **Chi-carré** : Pour l'association entre variables catégorielles.
+4. **Importance des variables** : Avec Random Forest.
+5. **RFE** : Sélection récursive de variables.
+6. **P-values** : Test de significativité statistique.
+
+Tu peux combiner plusieurs de ces techniques pour obtenir une vue globale des variables les plus pertinentes à utiliser pour ton modèle. N’hésite pas à préciser si tu souhaites des exemples plus détaillés sur une méthode spécifique !
