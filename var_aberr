@@ -1,0 +1,134 @@
+Pour traiter plusieurs variables contenant des valeurs aberrantes en même temps, on peut utiliser des approches automatisées qui s'appliquent à toutes les variables sélectionnées, plutôt que de les traiter individuellement. Voici comment procéder :
+
+### 1. **Identification des Variables Numériques**
+D'abord, il faut identifier les variables numériques dans le DataFrame.
+
+```python
+# Identification des variables numériques
+variables_numeriques = df.select_dtypes(include=['float64', 'int64']).columns
+print("Variables numériques : ", variables_numeriques)
+```
+
+### 2. **Détection et Traitement des Valeurs Aberrantes en Utilisant l'IQR**
+
+#### **A. Détection des Valeurs Aberrantes avec l'IQR**
+On va calculer les bornes inférieures et supérieures pour chaque variable en utilisant l'IQR (Interquartile Range) et les stocker dans un dictionnaire.
+
+```python
+# Calculer les bornes IQR pour chaque variable numérique
+bornes_iqr = {}
+
+for col in variables_numeriques:
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+    IQR = Q3 - Q1
+    borne_inferieure = Q1 - 1.5 * IQR
+    borne_superieure = Q3 + 1.5 * IQR
+    bornes_iqr[col] = (borne_inferieure, borne_superieure)
+    
+print("Bornes IQR des variables numériques :")
+print(bornes_iqr)
+```
+
+#### **B. Traitement des Valeurs Aberrantes avec l'IQR**
+On peut soit les supprimer, soit les remplacer par les bornes calculées, soit les imputer par une statistique comme la médiane.
+
+1. **Suppression des valeurs aberrantes :**
+```python
+# Suppression des valeurs aberrantes
+df_sans_outliers = df.copy()
+for col, (borne_inferieure, borne_superieure) in bornes_iqr.items():
+    df_sans_outliers = df_sans_outliers[(df_sans_outliers[col] >= borne_inferieure) & (df_sans_outliers[col] <= borne_superieure)]
+    
+print("Données après suppression des valeurs aberrantes :")
+print(df_sans_outliers)
+```
+
+2. **Imputation des valeurs aberrantes par les bornes IQR :**
+```python
+# Remplacement des valeurs aberrantes par les bornes IQR
+df_impute_outliers = df.copy()
+for col, (borne_inferieure, borne_superieure) in bornes_iqr.items():
+    df_impute_outliers[col] = np.where(df_impute_outliers[col] < borne_inferieure, borne_inferieure, df_impute_outliers[col])
+    df_impute_outliers[col] = np.where(df_impute_outliers[col] > borne_superieure, borne_superieure, df_impute_outliers[col])
+    
+print("Données après imputation des valeurs aberrantes :")
+print(df_impute_outliers)
+```
+
+3. **Imputation des valeurs aberrantes par la médiane :**
+```python
+# Remplacement des valeurs aberrantes par la médiane
+df_impute_median = df.copy()
+for col, (borne_inferieure, borne_superieure) in bornes_iqr.items():
+    median = df_impute_median[col].median()
+    df_impute_median[col] = np.where((df_impute_median[col] < borne_inferieure) | (df_impute_median[col] > borne_superieure), median, df_impute_median[col])
+    
+print("Données après imputation par la médiane :")
+print(df_impute_median)
+```
+
+### 3. **Traitement des Valeurs Aberrantes avec Z-Score**
+Pour traiter plusieurs variables à l'aide du Z-Score, on peut automatiser la détection des valeurs ayant un Z-Score supérieur à un certain seuil (généralement 3).
+
+#### **A. Détection des valeurs aberrantes avec Z-Score**
+```python
+# Détection des valeurs aberrantes avec Z-Score
+z_scores = np.abs(stats.zscore(df[variables_numeriques]))
+indices_outliers = np.where(z_scores > 3)  # 3 est le seuil commun
+print("Indices des valeurs aberrantes avec Z-Score :")
+print(indices_outliers)
+```
+
+#### **B. Traitement des valeurs aberrantes avec Z-Score**
+1. **Suppression des valeurs aberrantes :**
+```python
+# Suppression des valeurs aberrantes
+df_sans_outliers_z = df[(z_scores < 3).all(axis=1)]  # Garder les lignes sans valeurs aberrantes
+print("Données après suppression des valeurs aberrantes (Z-Score) :")
+print(df_sans_outliers_z)
+```
+
+2. **Imputation des valeurs aberrantes par la médiane :**
+```python
+# Remplacement par la médiane
+df_impute_median_z = df.copy()
+for col in variables_numeriques:
+    median = df_impute_median_z[col].median()
+    z_score_col = np.abs(stats.zscore(df_impute_median_z[col]))
+    df_impute_median_z[col] = np.where(z_score_col > 3, median, df_impute_median_z[col])
+    
+print("Données après imputation par la médiane (Z-Score) :")
+print(df_impute_median_z)
+```
+
+### 4. **Utilisation de Fonction Personnalisée**
+Si tu veux appliquer une fonction personnalisée pour le traitement des valeurs aberrantes, tu peux créer une fonction et l'appliquer à chaque colonne.
+
+```python
+# Fonction de traitement personnalisé
+def traiter_valeurs_aberrantes(colonne):
+    Q1 = colonne.quantile(0.25)
+    Q3 = colonne.quantile(0.75)
+    IQR = Q3 - Q1
+    borne_inferieure = Q1 - 1.5 * IQR
+    borne_superieure = Q3 + 1.5 * IQR
+    
+    return np.where(colonne < borne_inferieure, borne_inferieure,
+                    np.where(colonne > borne_superieure, borne_superieure, colonne))
+
+# Application de la fonction à toutes les colonnes numériques
+df_traite = df[variables_numeriques].apply(traiter_valeurs_aberrantes)
+
+print("Données après traitement personnalisé des valeurs aberrantes :")
+print(df_traite)
+```
+
+### Conclusion
+Le choix de la méthode dépend de la nature des valeurs aberrantes et de leur impact sur ton analyse ou modèle. Voici un résumé des options :
+
+- **Suppression** : Élimine les lignes avec des valeurs aberrantes. Utile si elles sont peu nombreuses et non représentatives.
+- **Imputation par bornes ou médiane** : Remplace les valeurs aberrantes par une statistique de la distribution. Utile si les valeurs aberrantes ne doivent pas être supprimées.
+- **Transformation des données** : Utilise des transformations comme le logarithme ou la normalisation.
+  
+N'hésite pas à indiquer si tu souhaites une approche spécifique ou un exemple concret pour ton jeu de données !
