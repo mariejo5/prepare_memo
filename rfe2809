@@ -1,0 +1,8 @@
+# Fixer un seuil d'importance (par exemple, 0.01)
+seuil_importance = 0.01
+
+# Sélectionner les variables dont l'importance est supérieure au seuil
+variables_pertinentes = [X.columns[i] for i in indices if importances[i] > seuil_importance]
+
+print("Variables pertinentes sélectionnées :")
+print(variables_pertinentes)
