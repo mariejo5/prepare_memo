@@ -1,0 +1,23 @@
+import pandas as pd
+
+# Convertir les tableaux NumPy en DataFrames pandas
+X_real_df = pd.DataFrame(real_data.values)      # Convertir les données réelles en DataFrame
+X_generated_df = pd.DataFrame(X_generated)      # Convertir les données générées en DataFrame
+y_real_df = pd.DataFrame(one_hot_labels)        # Convertir les labels réels en DataFrame
+y_generated_df = pd.DataFrame(y_generated)      # Convertir les labels générés en DataFrame
+
+# Ajuster les tailles si nécessaire (sous-échantillonnage)
+X_generated_df = X_generated_df.iloc[:X_real_df.shape[0], :]
+y_generated_df = y_generated_df.iloc[:y_real_df.shape[0], :]
+
+# Concaténer les caractéristiques (X) et les labels (y) séparément avec pandas
+X_augmented_df = pd.concat([X_real_df, X_generated_df], axis=0).reset_index(drop=True)  # Concaténer verticalement les données réelles et générées
+y_augmented_df = pd.concat([y_real_df, y_generated_df], axis=0).reset_index(drop=True)  # Concaténer verticalement les labels
+
+# Afficher les dimensions après concaténation
+print("Dimensions de X_augmented_df :", X_augmented_df.shape)
+print("Dimensions de y_augmented_df :", y_augmented_df.shape)
+
+# Facultatif : Reconvertir les DataFrames en tableaux NumPy si nécessaire
+X_augmented = X_augmented_df.values
+y_augmented = y_augmented_df.values
