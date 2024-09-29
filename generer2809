@@ -1,0 +1,7 @@
+# Sous-échantillonner les données générées pour correspondre à la taille des données réelles
+X_generated = X_generated[:real_data.shape[0], :]
+y_generated = y_generated[:one_hot_labels.shape[0]]
+
+# Concaténer les données après avoir ajusté la taille
+X_augmented = np.vstack([real_data.values, X_generated])
+y_augmented = np.hstack([one_hot_labels, y_generated])
