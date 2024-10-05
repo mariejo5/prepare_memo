@@ -1,0 +1,29 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+import numpy as np
+
+# Exemple de DataFrame avec la variable cible binaire
+data = pd.DataFrame({
+    'cible': [0, 1, 0, 1, 1, 0, 1, 0, 1, 1]  # Variable cible binaire
+})
+
+# Créer une figure et un axe
+fig, ax = plt.subplots(figsize=(8,6))
+
+# Créer un histogramme pour visualiser la distribution de la variable cible avec une échelle de couleurs
+colors = np.where(data['cible'] == 1, 'orange', 'blue')  # Couleurs selon la valeur de la variable cible
+scatter = ax.hist(data['cible'], bins=2, color=colors, rwidth=0.8)
+
+# Ajouter une barre d'échelle (color bar)
+sm = plt.cm.ScalarMappable(cmap='coolwarm', norm=plt.Normalize(vmin=0, vmax=1))
+sm.set_array([])
+plt.colorbar(sm, ax=ax, label="Valeur de la variable cible")
+
+# Ajouter un titre et des étiquettes
+plt.title("Distribution de la variable cible avec échelle")
+plt.xlabel("Valeur de la variable cible")
+plt.ylabel("Fréquence")
+
+# Afficher le graphique
+plt.show()
