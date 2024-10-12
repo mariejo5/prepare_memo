@@ -1,0 +1,20 @@
+import pandas as pd
+
+# Exemple de DataFrame
+data = {
+    'Revenu_net': [3000, 0, 4000, 5000, 4500],
+    'Charges_remboursement': [600, 700, 1000, 1500, 1200]
+}
+
+df = pd.DataFrame(data)
+
+# Calculer le taux d'endettement
+def calculer_taux_endettement(row):
+    if row['Revenu_net'] == 0:
+        return None  # ou une valeur spéciale comme 100
+    return (row['Charges_remboursement'] / row['Revenu_net']) * 100
+
+df['Taux_endettement'] = df.apply(calculer_taux_endettement, axis=1)
+
+# Afficher le DataFrame avec le taux d'endettement
+print(df)
