@@ -1,0 +1,32 @@
+import pandas as pd
+
+# Exemple de DataFrame
+# df = pd.read_csv('ton_fichier.csv')  # Charge ton DataFrame ici
+
+# Variable cible (exemple : 'Crédit souscrit')
+variable_cible = 'Crédit souscrit'
+
+# Sélectionner uniquement les colonnes numériques
+numerical_features = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+
+# Calculer la corrélation entre chaque variable numérique et la variable cible
+correlation_results = {}
+
+for feature in numerical_features:
+    if feature != variable_cible:
+        correlation = df[feature].corr(df[variable_cible])
+        correlation_results[feature] = correlation
+
+# Convertir les résultats en DataFrame
+correlation_df = pd.DataFrame(list(correlation_results.items()), columns=['Variable', 'Coefficient de Corrélation'])
+
+# Filtrer les variables pertinentes (par exemple, avec un seuil de 0.3 ou -0.3)
+threshold = 0.3
+correlation_df['Pertinent'] = correlation_df['Coefficient de Corrélation'].abs() > threshold
+
+# Afficher les résultats
+print(correlation_df)
+
+# Extraire les variables pertinentes dans une liste
+variables_pertinentes = correlation_df.loc[correlation_df['Pertinent'], 'Variable'].tolist()
+print("Variables pertinentes :", variables_pertinentes)
