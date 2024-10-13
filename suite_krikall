@@ -1,0 +1,6 @@
+# Extraire les variables pertinentes dans une liste
+variables_pertinentes = results_df.loc[results_df['Pertinence'], 'Variable Continue'].tolist()
+
+# Afficher les résultats et les variables pertinentes
+print(results_df)
+print("Variables pertinentes :", variables_pertinentes)
