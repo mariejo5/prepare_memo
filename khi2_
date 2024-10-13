@@ -1,0 +1,44 @@
+import pandas as pd
+from scipy.stats import chi2_contingency
+
+# Exemple de DataFrame
+# df = pd.read_csv('ton_fichier.csv')  # Charge ton DataFrame ici
+
+# Variable cible (exemple : 'Crédit souscrit')
+variable_cible = 'Crédit souscrit'
+
+# Identifier les variables catégorielles
+variables_categorielle = df.select_dtypes(include=['object', 'category']).columns.tolist()
+
+# Stocker les résultats
+results = []
+
+# Appliquer le test du chi carré pour chaque variable catégorielle
+for variable_categorie in variables_categorielle:
+    if variable_categorie != variable_cible:
+        # Créer une table de contingence
+        contingency_table = pd.crosstab(df[variable_categorie], df[variable_cible])
+        
+        # Effectuer le test du chi carré
+        chi2_stat, p_value, dof, expected = chi2_contingency(contingency_table)
+        
+        # Enregistrer les résultats
+        results.append({
+            'Variable Catégorielle': variable_categorie,
+            'Statistique Chi2': chi2_stat,
+            'p-value': p_value
+        })
+
+# Créer un DataFrame pour afficher les résultats
+results_df = pd.DataFrame(results)
+
+# Filtrer les résultats pour garder uniquement les variables pertinentes
+alpha = 0.05  # Seuil de significativité
+results_df['Pertinence'] = results_df['p-value'] < alpha
+
+# Extraire les variables pertinentes dans une liste
+variables_pertinentes = results_df.loc[results_df['Pertinence'], 'Variable Catégorielle'].tolist()
+
+# Afficher les résultats et les variables pertinentes
+print(results_df)
+print("Variables pertinentes :", variables_pertinentes)
