@@ -1,0 +1,40 @@
+import pandas as pd
+from scipy.stats import kruskal
+
+# Exemple de DataFrame
+# df = pd.read_csv('ton_fichier.csv')  # Charge ton DataFrame ici
+
+# Variable cible (exemple : 'Crédit souscrit')
+variable_cible = 'Crédit souscrit'
+
+# Identifier les variables continues (numériques)
+variables_continues = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+
+# Stocker les résultats
+results = []
+
+# Appliquer le test de Kruskal-Wallis pour chaque variable continue
+for variable_continue in variables_continues:
+    # Vérifier que la variable cible est binaire
+    if variable_cible in df.columns and df[variable_cible].nunique() == 2:
+        groupes = [group[variable_continue].values for name, group in df.groupby(variable_cible)]
+        
+        # Effectuer le test de Kruskal-Wallis
+        stat, p_value = kruskal(*groupes)
+        
+        # Enregistrer les résultats
+        results.append({
+            'Variable Continue': variable_continue,
+            'Statistique de Kruskal-Wallis': stat,
+            'p-value': p_value
+        })
+
+# Créer un DataFrame pour afficher les résultats
+results_df = pd.DataFrame(results)
+
+# Filtrer les résultats pour garder uniquement les variables pertinentes
+alpha = 0.05  # Seuil de significativité
+results_df['Pertinence'] = results_df['p-value'] < alpha
+
+# Afficher les résultats
+print(results_df)
