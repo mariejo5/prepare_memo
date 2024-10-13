@@ -1,0 +1,33 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.feature_selection import RFE
+
+# Exemple de DataFrame
+# df = pd.read_csv('ton_fichier.csv')  # Charge ton DataFrame ici
+
+# Variable cible (exemple : 'Crédit souscrit')
+variable_cible = 'Crédit souscrit'
+
+# Séparer les caractéristiques et la variable cible
+X = df.drop(columns=[variable_cible])
+y = df[variable_cible]
+
+# Encoder les variables catégorielles si nécessaire
+X = pd.get_dummies(X, drop_first=True)
+
+# Diviser le jeu de données en ensembles d'entraînement et de test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Créer un modèle de régression logistique
+model = LogisticRegression(max_iter=1000)
+
+# Appliquer RFE
+selector = RFE(model, n_features_to_select=5)  # Choisir le nombre de caractéristiques souhaité
+selector = selector.fit(X_train, y_train)
+
+# Obtenir les caractéristiques sélectionnées
+selected_features = X.columns[selector.support_]
+
+# Afficher les résultats
+print("Caractéristiques sélectionnées :", selected_features.tolist())
