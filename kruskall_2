@@ -1,0 +1,84 @@
+Pour appliquer le test de Kruskal-Wallis sur toutes les variables continues de ton DataFrame en fonction d'une variable catégorielle (par exemple, `Profession`), tu peux suivre ces étapes :
+
+### 1. Préparation des Données
+
+Assure-toi que ton DataFrame contient à la fois des variables continues et une variable catégorielle.
+
+### 2. Application du Test de Kruskal-Wallis
+
+Voici un exemple de code pour appliquer le test sur toutes les variables continues en fonction de la variable `Profession` :
+
+```python
+import pandas as pd
+from scipy.stats import kruskal
+
+# Liste des variables continues
+variables_continues = [
+    'Revenu annuel', 
+    'Taux d\'endettement', 
+    'Montant découvert', 
+    'Encours crédit à la consommation',
+    'Encours crédit immobilier',
+    'Encours épargne',
+    'Encours placement',
+    'Montant flux créditeur',
+    'Montant flux débiteur'
+]
+
+# Variable catégorielle
+variable_categorielle = 'Profession'
+
+# Stocker les résultats
+results = []
+
+# Appliquer le test de Kruskal-Wallis pour chaque variable continue
+for variable_continue in variables_continues:
+    # Regrouper les données par la variable catégorielle
+    groupes = [group[variable_continue].values for name, group in df.groupby(variable_categorielle)]
+    
+    # Effectuer le test de Kruskal-Wallis
+    stat, p_value = kruskal(*groupes)
+    
+    # Enregistrer les résultats
+    results.append({
+        'Variable Continue': variable_continue,
+        'Statistique de Kruskal-Wallis': stat,
+        'p-value': p_value
+    })
+
+# Créer un DataFrame pour afficher les résultats
+results_df = pd.DataFrame(results)
+
+# Afficher les résultats
+print(results_df)
+```
+
+### 3. Interprétation des Résultats
+
+Pour chaque variable continue :
+
+- **Statistique de Kruskal-Wallis** : Une valeur plus élevée indique une plus grande différence entre les groupes. Cela mesure l'écart entre les distributions des groupes.
+  
+- **p-value** : 
+  - Si la p-value est inférieure à 0.05, tu peux rejeter l'hypothèse nulle, ce qui signifie qu'il existe des différences significatives entre au moins deux des groupes comparés.
+  - Si la p-value est supérieure à 0.05, cela indique que les distributions des groupes sont similaires.
+
+### Exemple d'Interprétation
+
+Supposons que tu obtiennes les résultats suivants :
+
+| Variable Continue        | Statistique de Kruskal-Wallis | p-value  |
+|--------------------------|-------------------------------|----------|
+| Revenu annuel            | 15.34                         | 0.003    |
+| Taux d'endettement       | 5.67                          | 0.058    |
+| Montant découvert         | 9.45                          | 0.021    |
+
+#### Interprétation :
+
+- **Revenu annuel** : La p-value de 0.003 indique qu'il y a des différences significatives entre les professions en termes de revenu. 
+- **Taux d'endettement** : La p-value de 0.058 est juste au-dessus de 0.05, donc tu n'as pas suffisamment de preuves pour dire qu'il existe des différences significatives.
+- **Montant découvert** : La p-value de 0.021 indique également des différences significatives.
+
+### Conclusion
+
+Le test de Kruskal-Wallis te permet d'évaluer les différences entre les groupes pour plusieurs variables continues en même temps. Cela peut offrir des insights précieux sur comment des caractéristiques spécifiques, comme la profession, influencent d'autres variables. Si tu as besoin de plus de détails ou d'une analyse plus approfondie, fais-le moi savoir !
