@@ -1,0 +1,33 @@
+import pandas as pd
+from scipy.stats import kruskal
+
+# Exemple de DataFrame
+# df = pd.read_csv('ton_fichier.csv')  # Charge ton DataFrame ici
+
+# Identifier les variables continues (numériques)
+variables_continues = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+
+# Stocker les résultats
+results = []
+
+# Appliquer le test de Kruskal-Wallis pour chaque variable continue
+for variable_continue in variables_continues:
+    # Regrouper les données par profession ou autre variable catégorielle
+    if 'Profession' in df.columns:
+        groupes = [group[variable_continue].values for name, group in df.groupby('Profession')]
+        
+        # Effectuer le test de Kruskal-Wallis
+        stat, p_value = kruskal(*groupes)
+        
+        # Enregistrer les résultats
+        results.append({
+            'Variable Continue': variable_continue,
+            'Statistique de Kruskal-Wallis': stat,
+            'p-value': p_value
+        })
+
+# Créer un DataFrame pour afficher les résultats
+results_df = pd.DataFrame(results)
+
+# Afficher les résultats
+print(results_df)
