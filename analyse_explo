@@ -1,0 +1,24 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Créer un DataFrame d'exemple (remplacez-le par votre DataFrame df)
+# df = ... (Votre DataFrame original)
+
+# Liste des professions uniques
+professions = df['Profession'].unique()
+
+# Créer des sous-graphes
+num_classes = df['Variable cible'].nunique()
+fig, axes = plt.subplots(num_classes, 1, figsize=(10, 6), sharex=True)
+
+# Itérer sur chaque classe
+for i, class_value in enumerate(sorted(df['Variable cible'].unique())):
+    sns.countplot(x='Profession', data=df[df['Variable cible'] == class_value], ax=axes[i])
+    axes[i].set_title(f'Distribution des Professions pour la classe {class_value}')
+    axes[i].tick_params(axis='x', rotation=45)
+
+# Ajuster l'espace entre les sous-graphes
+plt.tight_layout()
+plt.xlabel('Profession')
+plt.ylabel('Nombre de clients')
+plt.show()
