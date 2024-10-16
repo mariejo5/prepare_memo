@@ -1,0 +1,52 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import SelectKBest, chi2, RFE
+
+# Supposons que df est déjà chargé et contient vos données
+
+# Séparation des caractéristiques et de la variable cible
+X = df.drop('Variable cible', axis=1)
+y = df['Variable cible']
+
+# 1. Méthode de Corrélation
+correlation_matrix = df.corr()
+plt.figure(figsize=(12, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
+plt.title('Matrice de Corrélation')
+plt.show()
+
+# Choisissez un seuil pour les corrélations
+threshold = 0.3
+correlated_features = correlation_matrix[correlation_matrix['Variable cible'].abs() > threshold].index.tolist()
+
+# 2. Sélection K-best
+best_features = SelectKBest(score_func=chi2, k=10)
+fit = best_features.fit(X, y)
+k_best_features = X.columns[fit.get_support()].tolist()
+
+# 3. Méthodes Intégrées avec Random Forest
+model = RandomForestClassifier()
+model.fit(X, y)
+importances = model.feature_importances_
+
+importance_df = pd.DataFrame({'Feature': X.columns, 'Importance': importances})
+importance_df = importance_df.sort_values(by='Importance', ascending=False)
+top_importance_features = importance_df.head(10)['Feature'].tolist()
+
+# 4. RFE (Recursive Feature Elimination)
+rfe = RFE(model, n_features_to_select=10)
+fit = rfe.fit(X, y)
+rfe_features = X.columns[fit.support_].tolist()
+
+# 5. Combiner les résultats
+selected_features = set(correlated_features + k_best_features + top_importance_features + rfe_features)
+selected_features = list(selected_features)
+
+# Mettre les variables pertinentes dans une variable
+variables_pertinentes = selected_features
+
+# Afficher les variables pertinentes
+print("Variables pertinentes sélectionnées :", variables_pertinentes)
