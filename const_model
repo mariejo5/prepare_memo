@@ -1,0 +1,63 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+
+# Supposons que X et y sont déjà définis
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Liste des modèles
+models = {
+    'Régression Logistique': LogisticRegression(),
+    'Arbre de Décision': DecisionTreeClassifier(),
+    'Forêt Aléatoire': RandomForestClassifier(),
+    'Gradient Boosting': GradientBoostingClassifier()
+}
+
+results = []
+
+# Entraîner et évaluer chaque modèle
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    
+    # Prédictions
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
+    
+    # Évaluation sur les données d'entraînement
+    train_report = classification_report(y_train, y_train_pred, output_dict=True)
+    
+    # Évaluation sur les données de test
+    test_report = classification_report(y_test, y_test_pred, output_dict=True)
+    
+    # Validation croisée
+    cv_scores = cross_val_score(model, X, y, cv=5, scoring='f1')
+    
+    results.append({
+        'Modèle': name,
+        'Train Precision': train_report['1']['precision'],
+        'Train Recall': train_report['1']['recall'],
+        'Train F1-Score': train_report['1']['f1-score'],
+        'Test Precision': test_report['1']['precision'],
+        'Test Recall': test_report['1']['recall'],
+        'Test F1-Score': test_report['1']['f1-score'],
+        'CV F1-Score Mean': cv_scores.mean(),
+        'CV F1-Score Std': cv_scores.std()
+    })
+
+results_df = pd.DataFrame(results)
+results_df.head()
+
+
+cv_scores_f1 = cross_val_score(model, X, y, cv=5, scoring='f1')
+cv_scores_precision = cross_val_score(model, X, y, cv=5, scoring='precision')
+cv_scores_recall = cross_val_score(model, X, y, cv=5, scoring='recall')
+
+results.append({
+    'Modèle': name,
+    'CV F1-Score Mean': cv_scores_f1.mean(),
+    'CV Precision Mean': cv_scores_precision.mean(),
+    'CV Recall Mean': cv_scores_recall.mean()
+})
