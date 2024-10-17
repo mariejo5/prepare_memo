@@ -1,0 +1,49 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Assurez-vous de remplacer 'Revenu' par le nom réel de la colonne du revenu dans votre DataFrame
+revenue_column = 'Monthly_Income'  # Remplacez par le nom correct de la colonne
+
+plt.figure(figsize=(12, 6))
+
+# Histogramme pour la classe 0
+plt.subplot(1, 2, 1)
+sns.histplot(data=df[df['Target'] == 0], x=revenue_column, kde=True, color='blue', element='step')
+plt.title(f"Classe 0 - Distribution de {revenue_column}", fontsize=14)
+plt.xlabel(revenue_column, fontsize=12)
+plt.ylabel("Fréquence", fontsize=12)
+
+# Histogramme pour la classe 1
+plt.subplot(1, 2, 2)
+sns.histplot(data=df[df['Target'] == 1], x=revenue_column, kde=True, color='red', element='step')
+plt.title(f"Classe 1 - Distribution de {revenue_column}", fontsize=14)
+plt.xlabel(revenue_column, fontsize=12)
+plt.ylabel("Fréquence", fontsize=12)
+
+plt.tight_layout(pad=3.0)
+plt.show()
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Remplacez 'Statut_Civil' par le nom réel de votre variable catégorielle
+categorical_variable = 'Statut_Civil'  # Exemple de variable catégorielle
+
+plt.figure(figsize=(12, 6))  # Taille de la figure
+
+# Sous-plot pour la classe 0
+plt.subplot(1, 2, 1)
+sns.countplot(x=categorical_variable, data=df[df['Target'] == 0], palette='pastel')
+plt.title(f"Classe 0 - Distribution de {categorical_variable}", fontsize=14)
+plt.xlabel(categorical_variable, fontsize=12)
+plt.ylabel("Nombre d'observations", fontsize=12)
+
+# Sous-plot pour la classe 1
+plt.subplot(1, 2, 2)
+sns.countplot(x=categorical_variable, data=df[df['Target'] == 1], palette='pastel')
+plt.title(f"Classe 1 - Distribution de {categorical_variable}", fontsize=14)
+plt.xlabel(categorical_variable, fontsize=12)
+plt.ylabel("Nombre d'observations", fontsize=12)
+
+# Ajustement de l'espacement
+plt.tight_layout(pad=3.0)
+plt.show()
