@@ -1,0 +1,35 @@
+plt.figure(figsize=(20, 15))
+for i, col in enumerate(df.select_dtypes(include=['int', 'float']).columns, 1):
+    # Création d'un sous-plot pour les deux classes côte à côte
+    plt.subplot(4, 6, 2 * i - 1)
+    sns.histplot(data=df[df['Target'] == 0], x=col, kde=True, color='blue', element='step')
+    plt.title(f"Classe 0 - Distribution de {col}")
+    plt.xlabel(col)
+    plt.ylabel("Fréquence")
+
+    plt.subplot(4, 6, 2 * i)
+    sns.histplot(data=df[df['Target'] == 1], x=col, kde=True, color='red', element='step')
+    plt.title(f"Classe 1 - Distribution de {col}")
+    plt.xlabel(col)
+    plt.ylabel("Fréquence")
+
+plt.tight_layout()
+plt.show()
+plt.figure(figsize=(20, 25))
+for i, col in enumerate(df.select_dtypes('object').columns, 1):
+    # Sous-plot pour la classe 0
+    plt.subplot(4, 6, 2 * i - 1)
+    sns.countplot(x=col, data=df[df['Target'] == 0], palette='pastel')
+    plt.title(f"Classe 0 - Distribution de {col}")
+    plt.xlabel(col)
+    plt.ylabel("Nombre d'observations")
+
+    # Sous-plot pour la classe 1
+    plt.subplot(4, 6, 2 * i)
+    sns.countplot(x=col, data=df[df['Target'] == 1], palette='pastel')
+    plt.title(f"Classe 1 - Distribution de {col}")
+    plt.xlabel(col)
+    plt.ylabel("Nombre d'observations")
+
+plt.tight_layout()
+plt.show()
