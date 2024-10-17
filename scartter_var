@@ -1,0 +1,6 @@
+plt.figure(figsize=(12, 6))
+sns.scatterplot(x='Age', y='Monthly_Income', hue='Target', data=data, palette='coolwarm', alpha=0.6)
+plt.title("Âge vs. Revenu mensuel selon les classes de la cible")
+plt.xlabel("Âge")
+plt.ylabel("Revenu mensuel")
+plt.show()
