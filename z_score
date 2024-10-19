@@ -1,0 +1,73 @@
+Pour traiter les valeurs aberrantes à l'aide de la méthode du Z-score, il s'agit d'identifier les valeurs situées à plusieurs écarts-types au-dessus ou en dessous de la moyenne. Les étapes sont les suivantes : calculer le Z-score pour chaque observation et traiter les valeurs avec un Z-score supérieur ou inférieur à un seuil donné (habituellement ±3).
+
+Voici comment adapter ce processus à un jeu de données pour les variables numériques :
+
+### Étape 1 : Calculer le Z-score
+
+```python
+from scipy import stats
+
+# Sélectionner les colonnes numériques pour le traitement des valeurs aberrantes
+numeric_columns = df.select_dtypes(include=['float64', 'int']).columns
+
+# Calculer le Z-score pour chaque observation des colonnes numériques
+z_scores = stats.zscore(df[numeric_columns])
+
+# Afficher les Z-scores calculés
+z_scores_df = pd.DataFrame(z_scores, columns=numeric_columns)
+print("Z-scores des variables numériques :")
+print(z_scores_df.head())
+```
+
+### Étape 2 : Identification des Valeurs Aberrantes
+
+Les valeurs avec un Z-score supérieur à 3 ou inférieur à -3 seront considérées comme des valeurs aberrantes.
+
+```python
+# Définir un seuil pour les valeurs aberrantes (généralement 3 ou -3)
+threshold = 3
+
+# Trouver les index des valeurs aberrantes
+outliers_index = np.where(np.abs(z_scores) > threshold)[0]
+
+# Afficher le nombre de valeurs aberrantes identifiées
+print(f"Nombre de valeurs aberrantes trouvées : {len(outliers_index)}")
+```
+
+### Étape 3 : Traitement des Valeurs Aberrantes
+
+Plusieurs stratégies peuvent être utilisées pour traiter les valeurs aberrantes :
+1. **Les supprimer**.
+2. **Les remplacer par la médiane ou la moyenne de la colonne**.
+3. **Les limiter (winsorizing)** : remplacer les valeurs aberrantes par la valeur du seuil (±3).
+
+Voici un exemple pour remplacer les valeurs aberrantes par la médiane :
+
+```python
+# Remplacer les valeurs aberrantes par la médiane des colonnes respectives
+df_cleaned = df.copy()
+
+for col in numeric_columns:
+    median = df[col].median()
+    z_col = z_scores_df[col]
+    df_cleaned[col] = np.where(np.abs(z_col) > threshold, median, df[col])
+
+# Afficher un aperçu du nouveau jeu de données sans valeurs aberrantes
+print("Jeu de données après traitement des valeurs aberrantes :")
+print(df_cleaned.head())
+```
+
+### Étape 4 : Vérification des Résultats
+
+```python
+# Vérifier si les valeurs aberrantes ont été correctement traitées
+plt.figure(figsize=(20, 15))
+for i, col in enumerate(numeric_columns, 1):
+    plt.subplot(4, 1, i)
+    sns.boxplot(df_cleaned[col])
+    plt.title(f"Distribution de {col} après traitement des valeurs aberrantes")
+plt.tight_layout()
+plt.show()
+```
+
+**Interprétation :** Après cette étape, les variables numériques auront moins de valeurs extrêmes, ce qui peut améliorer la performance des algorithmes de machine learning en réduisant les effets indésirables des valeurs aberrantes. Cela contribuera à rendre le modèle plus robuste et précis dans la prédiction de l'appétence au crédit à la consommation.
