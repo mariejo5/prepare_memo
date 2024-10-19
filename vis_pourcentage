@@ -1,0 +1,25 @@
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8, 6))
+ax = sns.countplot(x='gender', hue='has_product', data=df, palette='Set2')
+
+# Calculer les totaux pour chaque groupe 'gender'
+total_counts = df.groupby('gender').size()
+
+# Ajouter les pourcentages au-dessus de chaque barre
+for p in ax.patches:
+    height = p.get_height()
+    total = total_counts[p.get_x() // p.get_width()]
+    percentage = 100 * height / total
+    ax.annotate(f'{percentage:.1f}%', 
+                (p.get_x() + p.get_width() / 2., height), 
+                ha = 'center', 
+                va = 'center', 
+                xytext = (0, 5), 
+                textcoords = 'offset points')
+
+plt.title("Distribution de 'has_product' en fonction du 'gender'")
+plt.xlabel("Sexe")
+plt.ylabel("Nombre de clients")
+plt.show()
