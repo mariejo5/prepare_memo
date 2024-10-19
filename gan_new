@@ -1,0 +1,54 @@
+# Supposons que df soit votre DataFrame original et 'Target' votre variable cible
+df = your_dataframe.copy()  # Remplacez `your_dataframe` par le nom de votre DataFrame
+y = df['Target']  # Remplacez 'Target' par le nom de votre variable cible
+X = df.drop(columns=['Target']).astype(np.float32)
+
+# Séparer les classes
+minority_class = 1  # Choisissez la classe minoritaire
+majority_class = 0  # Choisissez la classe majoritaire
+X_minority = X[y == minority_class].reset_index(drop=True)
+
+# Calculer le nombre d'échantillons à générer pour équilibrer
+num_majority = len(X[y == majority_class])
+num_minority = len(X_minority)
+no_of_samples_to_generate = num_majority - num_minority
+
+# Entraînement du GAN (comme indiqué dans le code précédent)
+# Veuillez ajuster le nombre d'époques, le batch size, et les autres hyperparamètres selon vos besoins
+batch_size = 5
+epochs = 100  # Vous pouvez ajuster en fonction des performances
+
+for epoch in range(epochs):
+    num_batches = len(X_minority) // batch_size
+    for i in range(num_batches):
+        batch_X = next_batch(batch_size, X_minority)
+        batch_z = np.random.uniform(-1, 1, size=(batch_size, 100))
+        
+        # Entraîner le discriminateur
+        generated_data = generator.predict(batch_z)
+        d_loss_real = discriminator.train_on_batch(batch_X, np.ones((batch_size, 1)) * 0.9)
+        d_loss_fake = discriminator.train_on_batch(generated_data, np.zeros((batch_size, 1)))
+        d_loss = 0.5 * (d_loss_real + d_loss_fake)
+        
+        # Entraîner le générateur
+        g_loss = gan.train_on_batch(batch_z, np.ones((batch_size, 1)))
+    
+    print(f"Epoch {epoch+1}/{epochs} completed. D Loss: {d_loss}, G Loss: {g_loss}")
+
+# Générer de nouveaux échantillons
+sample_z = np.random.uniform(-1, 1, size=(no_of_samples_to_generate, 100))
+gen_samples = generator.predict(sample_z)
+
+# Créer un DataFrame à partir des échantillons générés
+generated_df = pd.DataFrame(gen_samples, columns=X.columns)
+
+# Créer des labels pour les échantillons générés (classe minoritaire)
+generated_labels = pd.Series(np.ones(len(generated_df)) * minority_class)
+
+# Concaténer les DataFrames générés avec l'ensemble de données original
+balanced_X = pd.concat([X, generated_df], ignore_index=True)
+balanced_y = pd.concat([y, generated_labels], ignore_index=True)
+
+# Afficher la distribution des classes
+print("\nDistribution des classes équilibrées :")
+print(balanced_y.value_counts())
