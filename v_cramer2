@@ -1,0 +1,69 @@
+Le *V de Cramer* est spécifiquement adapté pour évaluer l'association entre deux variables catégorielles. Dans le cas de la sélection de variables pertinentes pour un modèle prédictif, cette méthode est utile pour analyser la relation entre la variable cible et les autres variables catégorielles de votre jeu de données. Voici comment vous pouvez l'adapter à votre problème :
+
+### Étapes pour utiliser le V de Cramer dans votre cas
+
+1. **Vérifier le type de variables :**
+   - Le *V de Cramer* est applicable lorsque les deux variables sont catégorielles. La variable cible doit donc être catégorielle, tout comme les autres variables avec lesquelles vous souhaitez évaluer l'association.
+   - Si certaines variables ne sont pas catégorielles (par exemple, des variables numériques continues), il faut les transformer en variables catégorielles (par exemple, par *binning* ou *discrétisation*).
+
+2. **Calculer le V de Cramer pour chaque variable catégorielle par rapport à la variable cible :**
+   - Créez un tableau de contingence pour chaque paire (variable cible, variable explicative).
+   - Calculez le V de Cramer pour évaluer la force de l'association entre la variable cible et chaque variable explicative.
+
+3. **Interpréter les résultats :**
+   - Utilisez les valeurs du V de Cramer pour déterminer quelles variables ont une association plus forte avec la variable cible. Les valeurs plus élevées du V de Cramer indiquent une association plus forte et donc une pertinence potentielle pour la prédiction de la variable cible.
+
+### Exemple en Python
+
+Voici comment vous pouvez adapter le calcul du *V de Cramer* à votre sujet, pour sélectionner les variables pertinentes :
+
+```python
+import pandas as pd
+import numpy as np
+from scipy.stats import chi2_contingency
+
+# Fonction pour calculer le V de Cramer
+def cramers_v(x, y):
+    # Créer un tableau de contingence
+    contingency_table = pd.crosstab(x, y)
+    
+    # Calculer la statistique du Chi-2
+    chi2, p, dof, expected = chi2_contingency(contingency_table)
+    
+    # Calculer le nombre total d'observations
+    n = contingency_table.sum().sum()
+    
+    # Calculer la statistique V de Cramer
+    k = min(contingency_table.shape)  # Le plus petit nombre de catégories
+    v = np.sqrt(chi2 / (n * (k - 1)))
+    
+    return v
+
+# Exemple : Application à votre jeu de données
+# data est votre DataFrame contenant la variable cible 'target' et les autres variables explicatives
+variable_cible = 'target'
+variables_explicatives = data.columns.drop(variable_cible)
+
+# Calculer le V de Cramer pour chaque variable explicative catégorielle
+resultats_cramer = {}
+for var in variables_explicatives:
+    if data[var].dtype == 'object' or data[var].nunique() < 10:  # Si la variable est catégorielle
+        v_cramer = cramers_v(data[variable_cible], data[var])
+        resultats_cramer[var] = v_cramer
+
+# Afficher les résultats triés par ordre décroissant de V de Cramer
+resultats_cramer_trie = sorted(resultats_cramer.items(), key=lambda item: item[1], reverse=True)
+print("V de Cramer pour les variables catégorielles par rapport à la variable cible :")
+for var, v in resultats_cramer_trie:
+    print(f"{var}: {v:.3f}")
+```
+
+### Explications du code :
+1. **Filtrage des variables catégorielles :** Le code vérifie si une variable est catégorielle ou discrète en se basant sur son type (`object`) ou sur le nombre unique de valeurs (<10). Cette vérification est importante pour appliquer correctement le *V de Cramer*.
+2. **Calcul du V de Cramer :** La fonction `cramers_v` calcule le *V de Cramer* pour chaque paire (variable cible, variable explicative).
+3. **Tri des résultats :** Les variables sont triées par ordre décroissant du *V de Cramer* pour mettre en évidence les associations les plus fortes avec la variable cible.
+
+### Conclusion
+Le *V de Cramer* vous permet de quantifier la force de l'association entre les variables catégorielles explicatives et la variable cible. Les variables avec les valeurs les plus élevées de *V de Cramer* sont considérées comme ayant une relation plus forte avec la variable cible, ce qui en fait des candidates pertinentes pour la construction de votre modèle prédictif.
+
+Pour les variables numériques continues, vous pouvez les transformer en catégories (par exemple, en les divisant en intervalles) avant d'appliquer cette méthode.
