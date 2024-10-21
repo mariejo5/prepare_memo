@@ -1,0 +1,49 @@
+Pour les variables continues, la *corrélation de Pearson* peut être utilisée pour mesurer la force et la direction de la relation linéaire entre les variables explicatives et la variable cible continue. Voici comment procéder pour sélectionner les variables pertinentes et visualiser leur importance :
+
+1. **Calculer la corrélation de Pearson entre chaque variable explicative continue et la variable cible.**
+2. **Utiliser une représentation graphique pour montrer les valeurs de corrélation.**
+
+Voici un exemple en Python :
+
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Exemple de DataFrame
+# 'data' est votre DataFrame avec la variable cible 'target' et les variables explicatives
+variable_cible = 'target'
+variables_explicatives = data.columns.drop(variable_cible)
+
+# Calculer la corrélation de Pearson pour les variables continues
+correlations = {}
+for var in variables_explicatives:
+    if data[var].dtype in [np.float64, np.int64]:  # Vérifie si la variable est continue
+        corr = data[variable_cible].corr(data[var], method='pearson')
+        correlations[var] = abs(corr)  # Prendre la valeur absolue pour mesurer la force de la corrélation
+
+# Trier les résultats par ordre décroissant de corrélation
+correlations_trie = sorted(correlations.items(), key=lambda item: item[1], reverse=True)
+
+# Séparer les noms des variables et les valeurs de corrélation
+variables, valeurs_correlation = zip(*correlations_trie)
+
+# Créer un graphique en barres pour représenter l'importance des variables continues
+plt.figure(figsize=(10, 6))
+sns.barplot(x=valeurs_correlation, y=variables, palette="viridis")
+
+# Ajouter des étiquettes et un titre
+plt.xlabel("Valeur de la Corrélation de Pearson")
+plt.ylabel("Variables continues")
+plt.title("Importance des variables continues par rapport à la variable cible")
+plt.show()
+```
+
+### Explications du code :
+1. **Filtrage des variables continues :** On vérifie si chaque variable est de type `float64` ou `int64`, ce qui indique qu'elle est continue.
+2. **Calcul de la corrélation de Pearson :** La méthode `.corr()` de pandas permet de calculer la corrélation entre deux colonnes. La valeur absolue est utilisée pour mesurer la force de la corrélation indépendamment de la direction (positive ou négative).
+3. **Tri des résultats :** Les variables sont triées par ordre décroissant de corrélation pour montrer les plus pertinentes en premier.
+4. **Représentation graphique :** Un graphique en barres est utilisé pour visualiser l'importance des variables continues par rapport à la variable cible.
+
+Cette méthode permet de sélectionner les variables les plus fortement corrélées avec la variable cible, ce qui peut être utile pour la modélisation ou l'analyse exploratoire des données.
