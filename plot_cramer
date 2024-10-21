@@ -1,0 +1,15 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Les résultats du V de Cramer sont déjà triés sous forme de liste
+variables, valeurs_v_cramer = zip(*resultats_cramer_trie)
+
+# Créer un graphique en barres pour représenter l'importance des variables
+plt.figure(figsize=(10, 6))
+sns.barplot(x=valeurs_v_cramer, y=variables, palette="viridis")
+
+# Ajouter des étiquettes et un titre
+plt.xlabel("Valeur du V de Cramer")
+plt.ylabel("Variables catégorielles")
+plt.title("Importance des variables catégorielles par rapport à la variable cible")
+plt.show()
