@@ -1,0 +1,34 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import kruskal
+
+# 'data' est votre DataFrame contenant la variable cible 'target' et les autres variables explicatives
+variable_cible = 'target'
+variables_explicatives = data.columns.drop(variable_cible)
+
+# Calculer le test de Kruskal-Wallis pour les variables continues
+kruskal_scores = {}
+for var in variables_explicatives:
+    if data[var].dtype in ['int64', 'float64']:  # Vérifie si la variable est continue
+        # Appliquer le test de Kruskal-Wallis
+        groups = [group[var].values for name, group in data.groupby(variable_cible)]
+        stat, p_val = kruskal(*groups)
+        kruskal_scores[var] = stat
+
+# Trier les résultats par ordre décroissant de la statistique de Kruskal-Wallis
+kruskal_scores_trie = sorted(kruskal_scores.items(), key=lambda item: item[1], reverse=True)
+
+# Séparer les noms des variables et les valeurs du test de Kruskal-Wallis
+variables, valeurs_kruskal = zip(*kruskal_scores_trie)
+
+# Représentation graphique pour les variables continues
+plt.figure(figsize=(10, 6))
+sns.barplot(x=valeurs_kruskal, y=variables, palette="viridis")
+
+# Ajouter des étiquettes et un titre
+plt.xlabel("Valeur du test de Kruskal-Wallis")
+plt.ylabel("Variables continues")
+plt.title("Importance des variables continues selon le test de Kruskal-Wallis")
+plt.show()
