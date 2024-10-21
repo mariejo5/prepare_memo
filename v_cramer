@@ -1,0 +1,74 @@
+Le *V de Cramer* est une mesure utilisée pour évaluer l'association entre deux variables catégorielles dans un tableau de contingence. Il est basé sur le *Chi-2* (χ²) et permet de quantifier la force de l'association entre les variables. Contrairement à d'autres mesures comme le coefficient de corrélation, il est adapté aux variables catégorielles.
+
+### Étapes pour calculer le V de Cramer
+
+1. *Créer un tableau de contingence* : Il s'agit d'un tableau qui résume les fréquences d'occurrence pour chaque combinaison des catégories des deux variables.
+
+2. *Calculer la statistique du Chi-2* : Cette statistique évalue l'écart entre les fréquences observées et les fréquences attendues dans le tableau de contingence sous l'hypothèse d'indépendance des deux variables.
+
+3. *Appliquer la formule du V de Cramer* :
+
+   \[
+   V = \sqrt{\frac{\chi^2}{n \times (k - 1)}}
+   \]
+   
+   - *χ²* : La statistique du Chi-2 calculée à partir du tableau de contingence.
+   - *n* : Le nombre total d'observations.
+   - *k* : Le plus petit nombre de catégories entre les deux variables (nombre de lignes ou de colonnes dans le tableau de contingence).
+
+Le *V de Cramer* varie entre 0 et 1 :
+- *0* signifie qu'il n'y a aucune association entre les deux variables.
+- *1* signifie une association très forte.
+
+### Interprétation du V de Cramer
+- *0 ≤ V < 0.1* : Faible association.
+- *0.1 ≤ V < 0.3* : Association modérée.
+- *0.3 ≤ V < 0.5* : Association forte.
+- *V ≥ 0.5* : Association très forte.
+
+### Exemple en Python
+
+Voici comment calculer le V de Cramer en Python à l'aide de pandas et de scipy :
+
+python
+import pandas as pd
+import numpy as np
+from scipy.stats import chi2_contingency
+
+# Fonction pour calculer le V de Cramer
+def cramers_v(x, y):
+    # Créer un tableau de contingence
+    contingency_table = pd.crosstab(x, y)
+    
+    # Calculer la statistique du Chi-2
+    chi2, p, dof, expected = chi2_contingency(contingency_table)
+    
+    # Calculer le nombre total d'observations
+    n = contingency_table.sum().sum()
+    
+    # Calculer la statistique V de Cramer
+    k = min(contingency_table.shape)  # Le plus petit nombre de catégories
+    v = np.sqrt(chi2 / (n * (k - 1)))
+    
+    return v
+
+# Exemple d'utilisation avec deux variables catégorielles
+# Exemple de données
+data = pd.DataFrame({
+    'Var1': ['A', 'A', 'B', 'B', 'C', 'C', 'C', 'A'],
+    'Var2': ['X', 'Y', 'X', 'X', 'Y', 'Y', 'X', 'Y']
+})
+
+# Calcul du V de Cramer
+v_cramer = cramers_v(data['Var1'], data['Var2'])
+print(f"V de Cramer: {v_cramer}")
+
+
+### Explication :
+
+1. *pd.crosstab(x, y)* : Crée un tableau de contingence pour les deux variables catégorielles x et y.
+2. *chi2_contingency()* : Calcule le test du Chi-2 sur ce tableau.
+3. *V de Cramer* : Utilise la statistique du Chi-2 et le nombre d'observations pour calculer la force de l'association.
+
+### Conclusion :
+Le V de Cramer est une excellente méthode pour évaluer la force de l'association entre deux variables catégorielles. Tu peux l'utiliser pour filtrer les variables pertinentes dans ton analyse en observant les associations les plus fortes.
