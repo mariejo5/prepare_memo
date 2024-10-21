@@ -1,0 +1,29 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+# Supposons que df soit déjà défini, et que 'Target' et 'Segment' soient des colonnes dans df.
+
+plt.figure(figsize=(8, 6))
+
+# Création du countplot
+ax = sns.countplot(x='Target', hue='Segment', data=df, palette='Set1')
+
+# Calcul du nombre total d'instances pour chaque groupe de Target
+total = len(df)
+
+# Ajout des annotations pour les pourcentages
+for p in ax.patches:
+    height = p.get_height()
+    total_per_target = total
+    # Calcul du pourcentage
+    percentage = f'{height/total_per_target * 100:.1f}%'
+    ax.annotate(percentage, (p.get_x() + p.get_width() / 2., height),
+                ha='center', va='center', xytext=(0, 5),
+                textcoords='offset points')
+
+plt.title("Relation entre les Segments et la Target")
+plt.xlabel('Target')
+plt.ylabel("Nombre de clients")
+
+plt.show()
