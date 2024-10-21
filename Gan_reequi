@@ -1,0 +1,113 @@
+Pour adapter ce code à votre jeu de données et rééquilibrer les classes, nous allons suivre les étapes suivantes :
+
+1. **Adapter le DataFrame :** Utiliser votre jeu de données en définissant les variables appropriées pour les caractéristiques (features) et la variable cible (target).
+
+2. **Prétraiter les données :** Assurez-vous que les données sont au bon format (par exemple, valeurs numériques) et normalisées si nécessaire.
+
+3. **Adapter le GAN :** Utiliser le générateur et le discriminateur pour générer des échantillons de la classe minoritaire, de manière à équilibrer le nombre d'échantillons pour chaque classe.
+
+### Étapes d'adaptation :
+
+#### 1. Chargement de votre jeu de données
+
+Il est important de définir les caractéristiques (features) et la variable cible dans votre DataFrame.
+
+```python
+# Chargement de votre jeu de données (remplacez par le nom de votre fichier)
+data = pd.read_csv('votre_fichier.csv')  # Remplacez 'votre_fichier.csv' par le chemin réel de votre fichier
+
+# Définir la variable cible et les caractéristiques
+variable_cible = 'target'  # Remplacez 'target' par le nom de votre colonne de variable cible
+features = data.drop(columns=[variable_cible])  # Supprimer la colonne cible pour obtenir les caractéristiques
+target = data[variable_cible]  # Extraire la colonne cible
+
+# Afficher un aperçu des données
+print("Jeu de données original :")
+print(data.head())
+```
+
+#### 2. Prétraiter les données
+
+Nous allons convertir les caractéristiques en valeurs numériques si nécessaire et normaliser les données pour le GAN.
+
+```python
+# Vérifier et convertir les colonnes catégorielles en numériques (le cas échéant)
+features = pd.get_dummies(features, drop_first=True)
+
+# Normaliser les données (mise à l'échelle entre -1 et 1)
+from sklearn.preprocessing import MinMaxScaler
+
+scaler = MinMaxScaler(feature_range=(-1, 1))
+features = scaler.fit_transform(features)
+
+# Redéfinir les DataFrames pour l'entraînement
+X_train = pd.DataFrame(features)
+y_train = target.reset_index(drop=True)
+```
+
+#### 3. Adapter le GAN
+
+Nous allons utiliser le code existant pour construire les modèles du générateur et du discriminateur, et pour rééquilibrer les classes.
+
+```python
+NUM_FEATURES = X_train.shape[1]
+
+# Modèles du générateur et du discriminateur comme dans le code original
+# (Code pour 'build_generator' et 'build_discriminator' reste le même)
+# ...
+
+# Extraire uniquement les échantillons de la classe minoritaire
+minority_class = 1  # Supposons que la classe minoritaire est '1'
+X_ones = X_train[y_train == minority_class].reset_index(drop=True)
+
+# Définir le batch_size, le nombre d'époques, et les échantillons à générer
+batch_size = 5
+epochs = 8
+num_no_churn = (y_train == 0).sum()  # Nombre d'échantillons de la classe majoritaire
+num_churn = (y_train == 1).sum()  # Nombre d'échantillons de la classe minoritaire
+no_of_samples_to_generate = num_no_churn - num_churn  # Échantillons à générer
+
+# Entraîner le GAN
+for epoch in range(epochs):
+    num_batches = len(X_ones) // batch_size
+    for i in range(num_batches):
+        batch_X = next_batch(batch_size, X_ones)
+        batch_z = np.random.uniform(-1, 1, size=(batch_size, 100))
+        
+        # Entraîner le discriminateur
+        generated_data = generator.predict(batch_z)
+        d_loss_real = discriminator.train_on_batch(batch_X, np.ones((batch_size, 1)) * 0.9)
+        d_loss_fake = discriminator.train_on_batch(generated_data, np.zeros((batch_size, 1)))
+        d_loss = 0.5 * (d_loss_real + d_loss_fake)
+        
+        # Entraîner le générateur
+        g_loss = gan.train_on_batch(batch_z, np.ones((batch_size, 1)))
+    
+    print(f"Epoch {epoch+1}/{epochs} completed. D Loss: {d_loss}, G Loss: {g_loss}")
+
+# Générer les nouveaux échantillons
+sample_z = np.random.uniform(-1, 1, size=(no_of_samples_to_generate, 100))
+gen_samples = generator.predict(sample_z)
+
+# Inverser la normalisation des échantillons générés
+gen_samples = scaler.inverse_transform(gen_samples)
+
+# Ajouter les labels pour les nouveaux échantillons
+generated_df = pd.DataFrame(gen_samples, columns=X_train.columns)
+generated_labels = pd.Series(np.ones(len(generated_df)))
+
+# Rééquilibrer le DataFrame d'entraînement
+balanced_X_train = pd.concat([pd.DataFrame(features), generated_df], ignore_index=True)
+balanced_y_train = pd.concat([y_train, generated_labels], ignore_index=True)
+
+# Vérifier la distribution des classes rééquilibrées
+print("\nDistribution des classes rééquilibrées :")
+print(balanced_y_train.value_counts())
+```
+
+### Résumé :
+1. **Chargement et prétraitement des données :** On prépare les données en s'assurant qu'elles sont toutes numériques et normalisées.
+2. **Construction et entraînement du GAN :** Le GAN est utilisé pour générer des échantillons de la classe minoritaire.
+3. **Rééquilibrage du jeu de données :** Les nouveaux échantillons générés sont ajoutés pour équilibrer les classes.
+
+Cela permet de mieux traiter les problèmes de déséquilibre de classes dans votre jeu de données.
