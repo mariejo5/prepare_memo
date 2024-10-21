@@ -1,0 +1,32 @@
+L'erreur `"bool object has no attribute all"` se produit généralement avec `seaborn` ou `pandas` lorsqu'une variable ou un paramètre attend un objet différent de ce qui est fourni. Dans le cas de `seaborn.barplot`, il est possible que les valeurs fournies ne soient pas dans le bon format (par exemple, `None` ou des valeurs non numériques).
+
+Voici quelques pistes pour corriger ce problème :
+
+1. **Vérifier le contenu des listes `variables` et `valeurs_v_cramer` :** Assurez-vous qu'elles ne contiennent pas de `None` ou d'autres types inattendus. Vous pouvez afficher leur contenu pour vérifier cela :
+
+    ```python
+    print(variables)
+    print(valeurs_v_cramer)
+    ```
+
+2. **Convertir explicitement les valeurs en types attendus :** Si les valeurs sont dans un format incorrect, vous pouvez les convertir en listes ou en types appropriés avant de les passer à `seaborn.barplot` :
+
+    ```python
+    variables = list(variables)
+    valeurs_v_cramer = list(valeurs_v_cramer)
+    ```
+
+3. **Filtrer les valeurs non valides :** Si certaines valeurs sont `None` ou ne sont pas des nombres, il est préférable de les filtrer :
+
+    ```python
+    filtered_data = [(var, val) for var, val in zip(variables, valeurs_v_cramer) if val is not None]
+    variables, valeurs_v_cramer = zip(*filtered_data)
+    ```
+
+4. **Vérifier la version de `seaborn` et de `matplotlib` :** Assurez-vous que les bibliothèques sont à jour. Vous pouvez les mettre à jour avec :
+
+    ```bash
+    pip install --upgrade seaborn matplotlib
+    ```
+
+Essayez ces étapes pour diagnostiquer le problème et voir si cela résout l'erreur.
