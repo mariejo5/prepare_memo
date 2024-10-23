@@ -1,0 +1,88 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split, cross_validate
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, roc_curve, make_scorer
+import matplotlib.pyplot as plt
+
+# Sélection des caractéristiques et de la variable cible
+X = df[['balance', 'income', 'credit_flows', 'debit_flows', 'transaction_amount']]
+y = df['has_product']
+
+# Séparation des données en ensemble d'entraînement (70%) et de test (30%)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Standardisation des données
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Définir les modèles à entraîner
+models = {
+    'Gradient Boosting': GradientBoostingClassifier(),
+    'Random Forest': RandomForestClassifier(),
+    'Decision Tree': DecisionTreeClassifier(),
+    'K-Nearest Neighbors': KNeighborsClassifier(),
+    'AdaBoost': AdaBoostClassifier()
+}
+
+# Définir les métriques pour la validation croisée
+scoring = {
+    'accuracy': 'accuracy',
+    'precision': 'precision',
+    'recall': 'recall',
+    'f1': 'f1',
+    'roc_auc': 'roc_auc'
+}
+
+# Stocker les résultats dans une liste
+results = []
+
+# Entraîner et évaluer chaque modèle avec validation croisée
+for name, model in models.items():
+    print(f"Validation croisée pour le modèle : {name}")
+    
+    # Validation croisée sur l'ensemble d'entraînement
+    cv_results = cross_validate(model, X_train_scaled, y_train, cv=5, scoring=scoring)
+    
+    # Calculer la moyenne des scores pour chaque métrique
+    mean_accuracy = np.mean(cv_results['test_accuracy'])
+    mean_precision = np.mean(cv_results['test_precision'])
+    mean_recall = np.mean(cv_results['test_recall'])
+    mean_f1 = np.mean(cv_results['test_f1'])
+    mean_roc_auc = np.mean(cv_results['test_roc_auc'])
+    
+    # Stocker les résultats dans la liste
+    results.append({
+        'Modèle': name,
+        'Accuracy': mean_accuracy,
+        'Précision': mean_precision,
+        'Rappel': mean_recall,
+        'F1-Score': mean_f1,
+        'AUC-ROC': mean_roc_auc
+    })
+
+    # Entraînement sur l'ensemble d'entraînement complet
+    model.fit(X_train_scaled, y_train)
+    y_pred = model.predict(X_test_scaled)
+    y_prob = model.predict_proba(X_test_scaled)[:, 1]  # Probabilités pour la classe 1 (pour ROC-AUC)
+    
+    # Courbe ROC
+    fpr, tpr, _ = roc_curve(y_test, y_prob)
+    plt.plot(fpr, tpr, label=f'{name} (AUC = {roc_auc_score(y_test, y_prob):.2f})')
+
+# Afficher la courbe ROC pour tous les modèles
+plt.plot([0, 1], [0, 1], 'k--')  # Courbe ROC d'une classification aléatoire
+plt.xlabel('Taux de faux positifs')
+plt.ylabel('Taux de vrais positifs')
+plt.title('Courbe ROC')
+plt.legend()
+plt.show()
+
+# Convertir les résultats en DataFrame
+results_df = pd.DataFrame(results)
+print("\nRésultats de la validation croisée :")
+print(results_df)
