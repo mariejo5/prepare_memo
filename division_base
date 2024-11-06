@@ -1,0 +1,8 @@
+# Calculer la taille de chaque sous-base
+taille_sous_base = len(final_train) // 3
+reste = len(final_train) % 3  # Le reste si la division n'est pas exacte
+
+# Diviser la base en trois sous-ensembles
+base1 = final_train.iloc[:taille_sous_base + (1 if reste > 0 else 0)]
+base2 = final_train.iloc[taille_sous_base + (1 if reste > 0 else 0):2*taille_sous_base + (1 if reste > 1 else 0)]
+base3 = final_train.iloc[2*taille_sous_base + (1 if reste > 1 else 0):]
